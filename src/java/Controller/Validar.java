@@ -15,36 +15,33 @@ public class Validar extends HttpServlet {
 
     UsuarioDAO udao = new UsuarioDAO();
     UsuariosResourse u = new UsuariosResourse();
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String accion = request.getParameter("accion");
         System.out.println("=== VALIDAR ===");
         System.out.println("Acción: " + accion);
-        
-        if(accion != null && accion.equals("Ingresar")){
-            String nombre = request.getParameter("txtNombre");
+
+        if (accion != null && accion.equals("Ingresar")) {
+            String correo = request.getParameter("txtCorreo");
             String contrasenaHash = request.getParameter("txtPassword");
-            
-            System.out.println("Validando: " + nombre + " / " + contrasenaHash);
-            
-            u = udao.Validar(nombre, contrasenaHash);
-            
-            if(u.getNombre() != null){
+
+
+            u = udao.Validar(correo, contrasenaHash);
+
+            if (u.getNombre() != null) {
                 System.out.println("✅ LOGIN EXITOSO - Usuario: " + u.getNombre());
-                
+
                 // Crear sesión y guardar el usuario
                 HttpSession session = request.getSession();
                 session.setAttribute("usuario", u);
-                
+
                 // Redirigir según el rol
                 String rol = u.getRol();
-                System.out.println("Rol del usuario: " + rol);
-                
                 String dashboardPage = "";
-                
-                switch(rol.toLowerCase()) {
+
+                switch (rol.toLowerCase()) {
                     case "admin":
                     case "administrador":
                         dashboardPage = "dashboard_admin.jsp";
@@ -64,14 +61,14 @@ public class Validar extends HttpServlet {
                         System.out.println("⚠️ Rol no reconocido, usando dashboard simple");
                         break;
                 }
-                
+
                 System.out.println("Redirigiendo a: " + dashboardPage);
                 request.getRequestDispatcher(dashboardPage).forward(request, response);
-                
+
             } else {
                 System.out.println("❌ LOGIN FALLIDO");
                 request.setAttribute("error", "Usuario o contraseña incorrectos");
-                request.getRequestDispatcher("index.jsp").forward(request, response); 
+                request.getRequestDispatcher("index.jsp").forward(request, response);
             }
         } else {
             response.sendRedirect("index.jsp");

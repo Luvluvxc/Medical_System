@@ -1,4 +1,4 @@
-package Controller;
+/*package Controller;
 
 import Model.PacientesModel;
 import Model.UsuariosResourse;
@@ -235,4 +235,4 @@ public class PacientesController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-}
+}*/
