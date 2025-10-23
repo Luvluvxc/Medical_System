@@ -55,16 +55,7 @@
         <servlet-name>ConsultasController</servlet-name>
         <url-pattern>/ConsultasController</url-pattern>
     </servlet-mapping>
-    
-    <servlet>
-        <servlet-name>MedicamentosController</servlet-name>
-        <servlet-class>Controller.MedicamentosController</servlet-class>
-    </servlet>
-    
-    <servlet-mapping>
-        <servlet-name>MedicamentosController</servlet-name>
-        <url-pattern>/MedicamentosController</url-pattern>
-    </servlet-mapping>
+  
     
     <servlet>
         <servlet-name>DashboardController</servlet-name>

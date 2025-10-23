@@ -16,7 +16,6 @@ public class RestConfig extends Application {
         resources.add(Doctores.class);
         resources.add(Consultas.class);
         resources.add(Citas.class);
-        resources.add(Medicamentos.class);
         return resources;
     }
 }
