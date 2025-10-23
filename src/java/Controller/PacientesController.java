@@ -1,57 +1,46 @@
-/*package Controller;
+package Controller;
 
-import Model.PacientesModel;
-import Model.UsuariosResourse;
 import DAO.PacientesDAO;
 import DAO.UsuarioDAO;
+import Model.PacientesModel;
+import Model.UsuariosResourse;
 import java.io.IOException;
-import java.time.LocalDate;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.util.List;
+import java.time.LocalDate;
 
-@WebServlet(name = "PacientesController", urlPatterns = {"/PacientesController"})
 public class PacientesController extends HttpServlet {
-
-    PacientesDAO pacientesDAO = new PacientesDAO();
-    UsuarioDAO usuarioDAO = new UsuarioDAO();
+    
+    PacientesDAO dao = new PacientesDAO();
+    UsuarioDAO usuarioDao = new UsuarioDAO();
+    PacientesModel p = new PacientesModel();
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String accion = request.getParameter("accion");
         
-        if (accion == null) {
-            accion = "listar";
-        }
-        
         switch (accion) {
             case "listar":
                 listar(request, response);
                 break;
             case "nuevo":
-                mostrarFormularioNuevo(request, response);
+                nuevo(request, response);
                 break;
             case "registrar":
-                registrarNuevoPaciente(request, response);
+                registrar(request, response);
                 break;
             case "editar":
-                mostrarFormularioEditar(request, response);
+                editar(request, response);
                 break;
             case "actualizar":
                 actualizar(request, response);
                 break;
-            case "eliminar":
-                eliminar(request, response);
-                break;
-            case "buscar":
-                buscar(request, response);
-                break;
-            case "verHistorial":
-                verHistorial(request, response);
+            case "ver":
+                ver(request, response);
                 break;
             default:
                 listar(request, response);
@@ -59,169 +48,155 @@ public class PacientesController extends HttpServlet {
         }
     }
     
-    // LISTAR todos los pacientes
-    private void listar(HttpServletRequest request, HttpServletResponse response)
+    protected void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("pacientes", pacientesDAO.listar());
-        request.getRequestDispatcher("Pacientes/pacientes_lista.jsp").forward(request, response);
-    }
-    
-    // MOSTRAR formulario para nuevo paciente
-    private void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.getRequestDispatcher("Pacientes/pacientes_nuevo.jsp").forward(request, response);
-    }
-    
-    // REGISTRAR NUEVO PACIENTE (Primera visita - Caso de uso)
-    // La recepcionista crea el usuario y el paciente, password = correo
-    private void registrarNuevoPaciente(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
         try {
-            // 1. Crear usuario
-            String nombre = request.getParameter("nombre");
-            String apellido = request.getParameter("apellido");
-            String correo = request.getParameter("correo");
-            String telefono = request.getParameter("telefono");
-            
-            UsuariosResourse u = new UsuariosResourse();
-            u.setNombre(nombre);
-            u.setApellido(apellido);
-            u.setCorreo(correo);
-            u.setContrasenaHash(correo); // Password = correo (según requerimiento)
-            u.setTelefono(telefono);
-            u.setRol("paciente");
-            u.setActivo(true);
-            
-            // Agregar usuario
-            if (usuarioDAO.agregar(u)) {
-                // Obtener el usuario recién creado para obtener su ID
-                UsuariosResourse usuarioCreado = usuarioDAO.buscarPorCorreo(correo);
-                
-                if (usuarioCreado != null && usuarioCreado.getId() > 0) {
-                    // 2. Crear paciente
-                    String codigoPaciente = "PAC-" + usuarioCreado.getId();
-                    LocalDate fechaNacimiento = LocalDate.parse(request.getParameter("fechaNacimiento"));
-                    String genero = request.getParameter("genero");
-                    String direccion = request.getParameter("direccion");
-                    String contactoEmergenciaNombre = request.getParameter("contactoEmergenciaNombre");
-                    String contactoEmergenciaTelefono = request.getParameter("contactoEmergenciaTelefono");
-                    String historialMedico = request.getParameter("historialMedico");
-                    String alergias = request.getParameter("alergias");
-                    
-                    PacientesModel p = new PacientesModel();
-                    p.setUsuarioId(usuarioCreado.getId());
-                    p.setCodigoPaciente(codigoPaciente);
-                    p.setFechaNacimiento(fechaNacimiento);
-                    p.setGenero(genero);
-                    p.setDireccion(direccion);
-                    p.setContactoEmergenciaNombre(contactoEmergenciaNombre);
-                    p.setContactoEmergenciaTelefono(contactoEmergenciaTelefono);
-                    p.setHistorialMedico(historialMedico);
-                    p.setAlergias(alergias);
-                    
-                    if (pacientesDAO.agregar(p)) {
-                        request.setAttribute("mensaje", "Paciente registrado exitosamente");
-                        request.setAttribute("codigoPaciente", codigoPaciente);
-                        request.setAttribute("correoAcceso", correo);
-                    } else {
-                        request.setAttribute("error", "Error al registrar datos del paciente");
-                    }
-                } else {
-                    request.setAttribute("error", "Error al obtener ID del usuario creado");
-                }
-            } else {
-                request.setAttribute("error", "Error al crear usuario");
-            }
+            List<PacientesModel> lista = dao.Listar();
+            request.setAttribute("pacientes", lista);
+            request.getRequestDispatcher("Pacientes/pacientes_lista.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
+            request.setAttribute("error", "Error al listar pacientes: " + e.getMessage());
+            request.getRequestDispatcher("Pacientes/pacientes_lista.jsp").forward(request, response);
         }
-        
-        listar(request, response);
     }
     
-    // MOSTRAR formulario para editar
-    private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response)
+    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        PacientesModel p = pacientesDAO.buscarPorId(id);
-        
-        request.setAttribute("paciente", p);
-        request.getRequestDispatcher("Pacientes/pacientes_editar.jsp").forward(request, response);
-    }
-    
-    // ACTUALIZAR paciente
-    private void actualizar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
         try {
-            long id = Long.parseLong(request.getParameter("id"));
-            LocalDate fechaNacimiento = LocalDate.parse(request.getParameter("fechaNacimiento"));
+            String usuarioIdParam = request.getParameter("usuarioId");
+            
+            if (usuarioIdParam != null && !usuarioIdParam.isEmpty()) {
+                long usuarioId = Long.parseLong(usuarioIdParam);
+                UsuariosResourse usuario = usuarioDao.BuscarPorId(usuarioId);
+                request.setAttribute("usuarioSeleccionado", usuario);
+            }
+            
+            List<UsuariosResourse> usuarios = usuarioDao.Listar();
+            request.setAttribute("usuarios", usuarios);
+            request.getRequestDispatcher("Pacientes/pacientes_nuevo.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar formulario: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void registrar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long usuarioId = Long.parseLong(request.getParameter("usuarioId"));
+            String fechaNacStr = request.getParameter("fechaNacimiento");
             String genero = request.getParameter("genero");
             String direccion = request.getParameter("direccion");
-            String contactoEmergenciaNombre = request.getParameter("contactoEmergenciaNombre");
-            String contactoEmergenciaTelefono = request.getParameter("contactoEmergenciaTelefono");
-            String historialMedico = request.getParameter("historialMedico");
+            String contactoNombre = request.getParameter("contactoEmergenciaNombre");
+            String contactoTelefono = request.getParameter("contactoEmergenciaTelefono");
+            String historial = request.getParameter("historialMedico");
             String alergias = request.getParameter("alergias");
             
-            PacientesModel p = new PacientesModel();
-            p.setId(id);
-            p.setFechaNacimiento(fechaNacimiento);
+            p.setUsuarioId(usuarioId);
+            p.setFechaNacimiento(LocalDate.parse(fechaNacStr));
             p.setGenero(genero);
             p.setDireccion(direccion);
-            p.setContactoEmergenciaNombre(contactoEmergenciaNombre);
-            p.setContactoEmergenciaTelefono(contactoEmergenciaTelefono);
-            p.setHistorialMedico(historialMedico);
+            p.setContactoEmergenciaNombre(contactoNombre);
+            p.setContactoEmergenciaTelefono(contactoTelefono);
+            p.setHistorialMedico(historial);
             p.setAlergias(alergias);
             
-            if (pacientesDAO.actualizar(p)) {
-                request.setAttribute("mensaje", "Paciente actualizado exitosamente");
+            int resultado = dao.Agregar(p);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Paciente registrado exitosamente");
+                listar(request, response);
             } else {
-                request.setAttribute("error", "Error al actualizar paciente");
+                request.setAttribute("error", "Error al registrar paciente");
+                nuevo(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error: " + e.getMessage());
+            nuevo(request, response);
         }
-        
-        listar(request, response);
     }
     
-    // ELIMINAR paciente
-    private void eliminar(HttpServletRequest request, HttpServletResponse response)
+    protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        
-        if (pacientesDAO.eliminar(id)) {
-            request.setAttribute("mensaje", "Paciente eliminado exitosamente");
-        } else {
-            request.setAttribute("error", "Error al eliminar paciente");
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            PacientesModel paciente = dao.BuscarPorId(id);
+            
+            if (paciente != null) {
+                request.setAttribute("paciente", paciente);
+                request.getRequestDispatcher("Pacientes/pacientes_editar.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "Paciente no encontrado");
+                listar(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar paciente: " + e.getMessage());
+            listar(request, response);
         }
-        
-        listar(request, response);
     }
     
-    // BUSCAR pacientes por nombre
-    private void buscar(HttpServletRequest request, HttpServletResponse response)
+    protected void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        String nombre = request.getParameter("nombre");
-        request.setAttribute("pacientes", pacientesDAO.buscarPorNombre(nombre));
-        request.getRequestDispatcher("Pacientes/pacientes_lista.jsp").forward(request, response);
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            long usuarioId = Long.parseLong(request.getParameter("usuarioId"));
+            String fechaNacStr = request.getParameter("fechaNacimiento");
+            String genero = request.getParameter("genero");
+            String direccion = request.getParameter("direccion");
+            String contactoNombre = request.getParameter("contactoEmergenciaNombre");
+            String contactoTelefono = request.getParameter("contactoEmergenciaTelefono");
+            String historial = request.getParameter("historialMedico");
+            String alergias = request.getParameter("alergias");
+            
+            PacientesModel paciente = new PacientesModel();
+            paciente.setId(id);
+            paciente.setUsuarioId(usuarioId);
+            paciente.setFechaNacimiento(LocalDate.parse(fechaNacStr));
+            paciente.setGenero(genero);
+            paciente.setDireccion(direccion);
+            paciente.setContactoEmergenciaNombre(contactoNombre);
+            paciente.setContactoEmergenciaTelefono(contactoTelefono);
+            paciente.setHistorialMedico(historial);
+            paciente.setAlergias(alergias);
+            
+            int resultado = dao.Actualizar(paciente);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Paciente actualizado exitosamente");
+            } else {
+                request.setAttribute("error", "No se pudo actualizar el paciente");
+            }
+            
+            listar(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al actualizar paciente: " + e.getMessage());
+            listar(request, response);
+        }
     }
     
-    // VER HISTORIAL del paciente
-    private void verHistorial(HttpServletRequest request, HttpServletResponse response)
+    protected void ver(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        PacientesModel p = pacientesDAO.buscarPorId(id);
-        
-        request.setAttribute("paciente", p);
-        request.getRequestDispatcher("Pacientes/pacientes_historial.jsp").forward(request, response);
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            PacientesModel paciente = dao.BuscarPorId(id);
+            
+            if (paciente != null) {
+                request.setAttribute("paciente", paciente);
+                request.getRequestDispatcher("Pacientes/pacientes_ver.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "Paciente no encontrado");
+                listar(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar paciente: " + e.getMessage());
+            listar(request, response);
+        }
     }
 
     @Override
@@ -235,4 +210,4 @@ public class PacientesController extends HttpServlet {
             throws ServletException, IOException {
         processRequest(request, response);
     }
-}*/
+}

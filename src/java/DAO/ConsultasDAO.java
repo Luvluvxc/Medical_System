@@ -1,220 +1,251 @@
 package DAO;
 
 import Model.ConsultasModel;
-import Config.Conexion;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ConsultasDAO {
     
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
+    private static final String BASE_URL = "http://localhost:8080/proyectop/webresources/consultas";
     
-    // LISTAR todas las consultas
-    public List<ConsultasModel> listar() {
+    public List<ConsultasModel> Listar() {
         List<ConsultasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM consultas ORDER BY fecha_consulta DESC";
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                ConsultasModel c = mapearConsulta(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/lista");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONArray jsonArray = new JSONArray(response.toString());
+                
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    ConsultasModel c = new ConsultasModel();
+                    
+                    c.setId(obj.getLong("id"));
+                    c.setCitaId(obj.getInt("citaId"));
+                    c.setDiagnostico(obj.optString("diagnostico", ""));
+                    c.setPlanTratamiento(obj.optString("planTratamiento", ""));
+                    c.setObservaciones(obj.optString("observaciones", ""));
+                    
+                    lista.add(c);
+                }
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al listar consultas: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
+        
         return lista;
     }
     
-    // BUSCAR por ID
-    public ConsultasModel buscarPorId(long id) {
-        ConsultasModel c = new ConsultasModel();
-        String sql = "SELECT * FROM consultas WHERE id = ?";
+    public ConsultasModel BuscarPorId(long id) {
+        ConsultasModel consulta = null;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                c = mapearConsulta(rs);
+            URL url = new URL(BASE_URL + "/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONObject obj = new JSONObject(response.toString());
+                consulta = new ConsultasModel();
+                
+                consulta.setId(obj.getLong("id"));
+                consulta.setCitaId(obj.getInt("citaId"));
+                consulta.setDiagnostico(obj.optString("diagnostico", ""));
+                consulta.setPlanTratamiento(obj.optString("planTratamiento", ""));
+                consulta.setObservaciones(obj.optString("observaciones", ""));
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al buscar consulta: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return c;
+        
+        return consulta;
     }
     
-    // AGREGAR nueva consulta
-    public boolean agregar(ConsultasModel c) {
-        String sql = "INSERT INTO consultas (cita_id, paciente_id, doctor_id, fecha_consulta, " +
-                     "sintomas, diagnostico, plan_tratamiento, notas, signos_vitales, " +
-                     "fecha_proxima_visita, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public ConsultasModel BuscarPorCitaId(int citaId) {
+        ConsultasModel consulta = null;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, c.getCitaId());
-            ps.setLong(2, c.getPacienteId());
-            ps.setLong(3, c.getDoctorId());
-            ps.setTimestamp(4, Timestamp.valueOf(c.getFechaConsulta()));
-            ps.setString(5, c.getSintomas());
-            ps.setString(6, c.getDiagnostico());
-            ps.setString(7, c.getPlanTratamiento());
-            ps.setString(8, c.getNotas());
-            ps.setString(9, c.getSignosVitales());
-            ps.setDate(10, c.getFechaProximaVisita() != null ? Date.valueOf(c.getFechaProximaVisita()) : null);
-            ps.setString(11, c.getEstado());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ACTUALIZAR consulta
-    public boolean actualizar(ConsultasModel c) {
-        String sql = "UPDATE consultas SET sintomas=?, diagnostico=?, plan_tratamiento=?, " +
-                     "notas=?, signos_vitales=?, fecha_proxima_visita=?, estado=?, " +
-                     "actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, c.getSintomas());
-            ps.setString(2, c.getDiagnostico());
-            ps.setString(3, c.getPlanTratamiento());
-            ps.setString(4, c.getNotas());
-            ps.setString(5, c.getSignosVitales());
-            ps.setDate(6, c.getFechaProximaVisita() != null ? Date.valueOf(c.getFechaProximaVisita()) : null);
-            ps.setString(7, c.getEstado());
-            ps.setLong(8, c.getId());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ELIMINAR consulta
-    public boolean eliminar(long id) {
-        String sql = "DELETE FROM consultas WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // LISTAR consultas por paciente
-    public List<ConsultasModel> listarPorPaciente(long pacienteId) {
-        List<ConsultasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM consultas WHERE paciente_id = ? ORDER BY fecha_consulta DESC";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, pacienteId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                ConsultasModel c = mapearConsulta(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/cita/" + citaId);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONObject obj = new JSONObject(response.toString());
+                consulta = new ConsultasModel();
+                
+                consulta.setId(obj.getLong("id"));
+                consulta.setCitaId(obj.getInt("citaId"));
+                consulta.setDiagnostico(obj.optString("diagnostico", ""));
+                consulta.setPlanTratamiento(obj.optString("planTratamiento", ""));
+                consulta.setObservaciones(obj.optString("observaciones", ""));
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al buscar consulta por cita: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return lista;
+        
+        return consulta;
     }
     
-    // LISTAR consultas por doctor
-    public List<ConsultasModel> listarPorDoctor(long doctorId) {
-        List<ConsultasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM consultas WHERE doctor_id = ? ORDER BY fecha_consulta DESC";
+    public int Agregar(ConsultasModel c) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, doctorId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                ConsultasModel c = mapearConsulta(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/agregar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("citaId", c.getCitaId());
+            json.put("diagnostico", c.getDiagnostico());
+            json.put("planTratamiento", c.getPlanTratamiento());
+            json.put("observaciones", c.getObservaciones());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Enviando consulta: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Consulta agregada, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al agregar consulta: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return lista;
+        
+        return resultado;
     }
     
-    // BUSCAR consulta por cita_id
-    public ConsultasModel buscarPorCitaId(long citaId) {
-        ConsultasModel c = new ConsultasModel();
-        String sql = "SELECT * FROM consultas WHERE cita_id = ?";
+    public int Actualizar(ConsultasModel c) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, citaId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                c = mapearConsulta(rs);
+            URL url = new URL(BASE_URL + "/modificar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("id", c.getId());
+            json.put("citaId", c.getCitaId());
+            json.put("diagnostico", c.getDiagnostico());
+            json.put("planTratamiento", c.getPlanTratamiento());
+            json.put("observaciones", c.getObservaciones());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Actualizando consulta: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Consulta actualizada, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al actualizar consulta: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return c;
+        
+        return resultado;
     }
     
-    // Método auxiliar para mapear ResultSet a ConsultasModel
-    private ConsultasModel mapearConsulta(ResultSet rs) throws SQLException {
-        ConsultasModel c = new ConsultasModel();
-        c.setId(rs.getLong("id"));
-        c.setCitaId(rs.getLong("cita_id"));
-        c.setPacienteId(rs.getLong("paciente_id"));
-        c.setDoctorId(rs.getLong("doctor_id"));
-        c.setFechaConsulta(rs.getTimestamp("fecha_consulta").toLocalDateTime());
-        c.setSintomas(rs.getString("sintomas"));
-        c.setDiagnostico(rs.getString("diagnostico"));
-        c.setPlanTratamiento(rs.getString("plan_tratamiento"));
-        c.setNotas(rs.getString("notas"));
-        c.setSignosVitales(rs.getString("signos_vitales"));
-        Date fechaProxima = rs.getDate("fecha_proxima_visita");
-        c.setFechaProximaVisita(fechaProxima != null ? fechaProxima.toLocalDate() : null);
-        c.setEstado(rs.getString("estado"));
-        c.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-        c.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
-        return c;
-    }
-    
-    private void cerrarConexiones() {
+    public int Eliminar(long id) {
+        int resultado = 0;
+        
         try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            URL url = new URL(BASE_URL + "/eliminar/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("DELETE");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta eliminar: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Consulta eliminada, resultado: " + resultado);
+            }
+        } catch (Exception e) {
+            System.out.println("[v0] Error al eliminar consulta: " + e.getMessage());
+            e.printStackTrace();
         }
+        
+        return resultado;
     }
 }

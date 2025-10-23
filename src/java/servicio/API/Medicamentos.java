@@ -5,88 +5,141 @@ import Config.Conexion;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONObject;
 
 @Path("medicamentos")
 public class Medicamentos {
     Conexion cn = new Conexion();
+    Connection con;
+    PreparedStatement ps;
+    ResultSet rs;
     
     @GET
     @Path("/lista")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<MedicamentosModel> listarMedicamentos() {
+    public List<MedicamentosModel> listar() {
         List<MedicamentosModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM medicamentos WHERE activo = true";
+        String sql = "SELECT * FROM medicamentos ORDER BY nombre ASC";
         
-        try (Connection con = cn.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try {
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
+            rs = ps.executeQuery();
             
             while (rs.next()) {
                 MedicamentosModel m = new MedicamentosModel();
                 m.setId(rs.getLong("id"));
                 m.setNombre(rs.getString("nombre"));
-                m.setNombreGenerico(rs.getString("nombre_generico"));
-                m.setMarca(rs.getString("marca"));
-                m.setUnidadMedidaId(rs.getLong("unidad_medida_id"));
                 m.setCantidadStock(rs.getInt("cantidad_stock"));
-                m.setNivelMinimoStock(rs.getInt("nivel_minimo_stock"));
-                m.setPrecioUnitario(rs.getBigDecimal("precio_unitario"));
+                m.setPrecioUnitario(rs.getDouble("precio_unitario"));
                 
                 Date fechaExp = rs.getDate("fecha_expiracion");
                 m.setFechaExpiracion(fechaExp != null ? fechaExp.toLocalDate() : null);
                 
-                m.setNumeroLote(rs.getString("numero_lote"));
                 m.setDescripcion(rs.getString("descripcion"));
-                m.setActivo(rs.getBoolean("activo"));
-                
-                Timestamp creado = rs.getTimestamp("creado_en");
-                m.setCreadoEn(creado != null ? creado.toLocalDateTime() : null);
-                
-                Timestamp actualizado = rs.getTimestamp("actualizado_en");
-                m.setActualizadoEn(actualizado != null ? actualizado.toLocalDateTime() : null);
                 
                 lista.add(m);
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         return lista;
+    }
+    
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public MedicamentosModel buscarPorId(@PathParam("id") long id) {
+        String sql = "SELECT * FROM medicamentos WHERE id = ?";
+        MedicamentosModel m = null;
+        
+        try {
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
+            ps.setLong(1, id);
+            rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                m = new MedicamentosModel();
+                m.setId(rs.getLong("id"));
+                m.setNombre(rs.getString("nombre"));
+                m.setCantidadStock(rs.getInt("cantidad_stock"));
+                m.setPrecioUnitario(rs.getDouble("precio_unitario"));
+                
+                Date fechaExp = rs.getDate("fecha_expiracion");
+                m.setFechaExpiracion(fechaExp != null ? fechaExp.toLocalDate() : null);
+                
+                m.setDescripcion(rs.getString("descripcion"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return m;
     }
     
     @POST
     @Path("/agregar")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public int agregarMedicamento(MedicamentosModel medicamento) {
-        String sql = "INSERT INTO medicamentos (nombre, nombre_generico, marca, unidad_medida_id, "
-                   + "cantidad_stock, nivel_minimo_stock, precio_unitario, fecha_expiracion, "
-                   + "numero_lote, descripcion, activo, creado_en, actualizado_en) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    public int agregar(String jsonString) {
+        System.out.println("[v0] API Medicamentos recibió: " + jsonString);
         
-        try (Connection con = cn.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = "INSERT INTO medicamentos (nombre, cantidad_stock, precio_unitario, "
+                   + "fecha_expiracion, descripcion) VALUES (?, ?, ?, ?, ?)";
+        
+        try {
+            JSONObject json = new JSONObject(jsonString);
             
-            ps.setString(1, medicamento.getNombre());
-            ps.setString(2, medicamento.getNombreGenerico());
-            ps.setString(3, medicamento.getMarca());
-            ps.setObject(4, medicamento.getUnidadMedidaId());
-            ps.setInt(5, medicamento.getCantidadStock());
-            ps.setInt(6, medicamento.getNivelMinimoStock());
-            ps.setBigDecimal(7, medicamento.getPrecioUnitario());
-            ps.setDate(8, medicamento.getFechaExpiracion() != null ? 
-                      Date.valueOf(medicamento.getFechaExpiracion()) : null);
-            ps.setString(9, medicamento.getNumeroLote());
-            ps.setString(10, medicamento.getDescripcion());
-            ps.setBoolean(11, true);
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
             
-            return ps.executeUpdate() > 0 ? 1 : 0;
+            ps.setString(1, json.getString("nombre"));
+            ps.setInt(2, json.getInt("cantidadStock"));
+            ps.setDouble(3, json.getDouble("precioUnitario"));
+            
+            if (json.has("fechaExpiracion") && !json.isNull("fechaExpiracion")) {
+                String fechaStr = json.getString("fechaExpiracion");
+                ps.setDate(4, Date.valueOf(fechaStr));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+            
+            ps.setString(5, json.optString("descripcion", null));
+            
+            int result = ps.executeUpdate();
+            System.out.println("[v0] Medicamento insertado, filas afectadas: " + result);
+            
+            return result > 0 ? 1 : 0;
             
         } catch (Exception e) {
+            System.out.println("[v0] Error en agregar medicamento: " + e.getMessage());
             e.printStackTrace();
             return 0;
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
     
@@ -94,80 +147,64 @@ public class Medicamentos {
     @Path("/modificar")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
-    public int modificarMedicamento(MedicamentosModel medicamento) {
-        String sql = "UPDATE medicamentos SET nombre=?, nombre_generico=?, marca=?, "
-                   + "unidad_medida_id=?, nivel_minimo_stock=?, precio_unitario=?, "
-                   + "fecha_expiracion=?, numero_lote=?, descripcion=?, activo=?, "
-                   + "actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
+    public int modificar(MedicamentosModel medicamento) {
+        String sql = "UPDATE medicamentos SET nombre=?, cantidad_stock=?, precio_unitario=?, "
+                   + "fecha_expiracion=?, descripcion=? WHERE id=?";
         
-        try (Connection con = cn.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try {
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
             
             ps.setString(1, medicamento.getNombre());
-            ps.setString(2, medicamento.getNombreGenerico());
-            ps.setString(3, medicamento.getMarca());
-            ps.setObject(4, medicamento.getUnidadMedidaId());
-            ps.setInt(5, medicamento.getNivelMinimoStock());
-            ps.setBigDecimal(6, medicamento.getPrecioUnitario());
-            ps.setDate(7, medicamento.getFechaExpiracion() != null ? 
+            ps.setInt(2, medicamento.getCantidadStock());
+            ps.setDouble(3, medicamento.getPrecioUnitario());
+            ps.setDate(4, medicamento.getFechaExpiracion() != null ? 
                       Date.valueOf(medicamento.getFechaExpiracion()) : null);
-            ps.setString(8, medicamento.getNumeroLote());
-            ps.setString(9, medicamento.getDescripcion());
-            ps.setBoolean(10, medicamento.isActivo());
-            ps.setLong(11, medicamento.getId());
+            ps.setString(5, medicamento.getDescripcion());
+            ps.setLong(6, medicamento.getId());
             
             return ps.executeUpdate() > 0 ? 1 : 0;
             
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
-        }
-    }
-    
-    @PUT
-    @Path("/actualizar-stock/{id}")
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.TEXT_PLAIN)
-    public int actualizarStock(@PathParam("id") long id, int nuevaCantidad) {
-        String sql = "UPDATE medicamentos SET cantidad_stock=?, actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        
-        try (Connection con = cn.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            
-            ps.setInt(1, nuevaCantidad);
-            ps.setLong(2, id);
-            
-            return ps.executeUpdate() > 0 ? 1 : 0;
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-    
-    @GET
-    @Path("/bajo-stock")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<MedicamentosModel> medicamentosBajoStock() {
-        List<MedicamentosModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM medicamentos WHERE cantidad_stock <= nivel_minimo_stock AND activo = true";
-        
-        try (Connection con = cn.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            while (rs.next()) {
-                MedicamentosModel m = new MedicamentosModel();
-                m.setId(rs.getLong("id"));
-                m.setNombre(rs.getString("nombre"));
-                m.setCantidadStock(rs.getInt("cantidad_stock"));
-                m.setNivelMinimoStock(rs.getInt("nivel_minimo_stock"));
-                m.setPrecioUnitario(rs.getBigDecimal("precio_unitario"));
-                lista.add(m);
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return lista;
+    }
+    
+    @DELETE
+    @Path("/eliminar/{id}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public int eliminar(@PathParam("id") long id) {
+        String sql = "DELETE FROM medicamentos WHERE id = ?";
+        
+        try {
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
+            ps.setLong(1, id);
+            
+            int result = ps.executeUpdate();
+            System.out.println("[v0] Medicamento eliminado, filas afectadas: " + result);
+            
+            return result > 0 ? 1 : 0;
+            
+        } catch (Exception e) {
+            System.out.println("[v0] Error en eliminar medicamento: " + e.getMessage());
+            e.printStackTrace();
+            return 0;
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }

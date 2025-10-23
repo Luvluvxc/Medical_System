@@ -257,12 +257,7 @@
                             </div>
                         </div>
 
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">
-                                Recordarme
-                            </label>
-                        </div>
+                        
 
                         <button type="submit" name="accion" value="Ingresar" class="btn btn-primary btn-login w-100">
                             <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar al Sistema

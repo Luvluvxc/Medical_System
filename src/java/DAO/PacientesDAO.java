@@ -1,252 +1,235 @@
 package DAO;
 
 import Model.PacientesModel;
-import Config.Conexion;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class PacientesDAO {
     
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
+    private static final String BASE_URL = "http://localhost:8080/proyectop/webresources/pacientes";
     
-    // LISTAR todos los pacientes
-    public List<PacientesModel> listar() {
+    public List<PacientesModel> Listar() {
         List<PacientesModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM pacientes ORDER BY creado_en DESC";
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                PacientesModel p = new PacientesModel();
-                p.setId(rs.getLong("id"));
-                p.setUsuarioId(rs.getLong("usuario_id"));
-                p.setCodigoPaciente(rs.getString("codigo_paciente"));
-                p.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
-                p.setGenero(rs.getString("genero"));
-                p.setDireccion(rs.getString("direccion"));
-                p.setContactoEmergenciaNombre(rs.getString("contacto_emergencia_nombre"));
-                p.setContactoEmergenciaTelefono(rs.getString("contacto_emergencia_telefono"));
-                p.setHistorialMedico(rs.getString("historial_medico"));
-                p.setAlergias(rs.getString("alergias"));
-                p.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-                p.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
-                lista.add(p);
+            URL url = new URL(BASE_URL + "/lista");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONArray jsonArray = new JSONArray(response.toString());
+                
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    PacientesModel p = new PacientesModel();
+                    
+                    p.setId(obj.getLong("id"));
+                    p.setUsuarioId(obj.getLong("usuarioId"));
+                    p.setCodigoPaciente(obj.getString("codigoPaciente"));
+                    
+                    if (obj.has("fechaNacimiento") && !obj.isNull("fechaNacimiento")) {
+                        p.setFechaNacimiento(LocalDate.parse(obj.getString("fechaNacimiento")));
+                    }
+                    
+                    p.setGenero(obj.optString("genero", ""));
+                    p.setDireccion(obj.optString("direccion", ""));
+                    p.setContactoEmergenciaNombre(obj.optString("contactoEmergenciaNombre", ""));
+                    p.setContactoEmergenciaTelefono(obj.optString("contactoEmergenciaTelefono", ""));
+                    p.setHistorialMedico(obj.optString("historialMedico", ""));
+                    p.setAlergias(obj.optString("alergias", ""));
+                    
+                    p.setUsuarioNombre(obj.optString("usuarioNombre", ""));
+                    p.setUsuarioApellido(obj.optString("usuarioApellido", ""));
+                    p.setUsuarioCorreo(obj.optString("usuarioCorreo", ""));
+                    p.setUsuarioTelefono(obj.optString("usuarioTelefono", ""));
+                    p.setUsuarioRol(obj.optString("usuarioRol", ""));
+                    p.setUsuarioActivo(obj.optBoolean("usuarioActivo", true));
+                    
+                    lista.add(p);
+                }
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al listar pacientes: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
+        
         return lista;
     }
     
-    // BUSCAR por ID
-    public PacientesModel buscarPorId(long id) {
-        PacientesModel p = new PacientesModel();
-        String sql = "SELECT * FROM pacientes WHERE id = ?";
+    public PacientesModel BuscarPorId(long id) {
+        PacientesModel paciente = null;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                p.setId(rs.getLong("id"));
-                p.setUsuarioId(rs.getLong("usuario_id"));
-                p.setCodigoPaciente(rs.getString("codigo_paciente"));
-                p.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
-                p.setGenero(rs.getString("genero"));
-                p.setDireccion(rs.getString("direccion"));
-                p.setContactoEmergenciaNombre(rs.getString("contacto_emergencia_nombre"));
-                p.setContactoEmergenciaTelefono(rs.getString("contacto_emergencia_telefono"));
-                p.setHistorialMedico(rs.getString("historial_medico"));
-                p.setAlergias(rs.getString("alergias"));
-                p.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-                p.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
+            URL url = new URL(BASE_URL + "/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONObject obj = new JSONObject(response.toString());
+                paciente = new PacientesModel();
+                
+                paciente.setId(obj.getLong("id"));
+                paciente.setUsuarioId(obj.getLong("usuarioId"));
+                paciente.setCodigoPaciente(obj.getString("codigoPaciente"));
+                
+                if (obj.has("fechaNacimiento") && !obj.isNull("fechaNacimiento")) {
+                    paciente.setFechaNacimiento(LocalDate.parse(obj.getString("fechaNacimiento")));
+                }
+                
+                paciente.setGenero(obj.optString("genero", ""));
+                paciente.setDireccion(obj.optString("direccion", ""));
+                paciente.setContactoEmergenciaNombre(obj.optString("contactoEmergenciaNombre", ""));
+                paciente.setContactoEmergenciaTelefono(obj.optString("contactoEmergenciaTelefono", ""));
+                paciente.setHistorialMedico(obj.optString("historialMedico", ""));
+                paciente.setAlergias(obj.optString("alergias", ""));
+                
+                paciente.setUsuarioNombre(obj.optString("usuarioNombre", ""));
+                paciente.setUsuarioApellido(obj.optString("usuarioApellido", ""));
+                paciente.setUsuarioCorreo(obj.optString("usuarioCorreo", ""));
+                paciente.setUsuarioTelefono(obj.optString("usuarioTelefono", ""));
+                paciente.setUsuarioRol(obj.optString("usuarioRol", ""));
+                paciente.setUsuarioActivo(obj.optBoolean("usuarioActivo", true));
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al buscar paciente: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return p;
+        
+        return paciente;
     }
     
-    // BUSCAR por codigo_paciente
-    public PacientesModel buscarPorCodigo(String codigoPaciente) {
-        PacientesModel p = new PacientesModel();
-        String sql = "SELECT * FROM pacientes WHERE codigo_paciente = ?";
+    public int Agregar(PacientesModel p) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, codigoPaciente);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                p.setId(rs.getLong("id"));
-                p.setUsuarioId(rs.getLong("usuario_id"));
-                p.setCodigoPaciente(rs.getString("codigo_paciente"));
-                p.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
-                p.setGenero(rs.getString("genero"));
-                p.setDireccion(rs.getString("direccion"));
-                p.setContactoEmergenciaNombre(rs.getString("contacto_emergencia_nombre"));
-                p.setContactoEmergenciaTelefono(rs.getString("contacto_emergencia_telefono"));
-                p.setHistorialMedico(rs.getString("historial_medico"));
-                p.setAlergias(rs.getString("alergias"));
+            URL url = new URL(BASE_URL + "/agregar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("usuarioId", p.getUsuarioId());
+            json.put("codigoPaciente", p.getCodigoPaciente());
+            
+            if (p.getFechaNacimiento() != null) {
+                json.put("fechaNacimiento", p.getFechaNacimiento().toString());
+            }
+            
+            json.put("genero", p.getGenero());
+            json.put("direccion", p.getDireccion());
+            json.put("contactoEmergenciaNombre", p.getContactoEmergenciaNombre());
+            json.put("contactoEmergenciaTelefono", p.getContactoEmergenciaTelefono());
+            json.put("historialMedico", p.getHistorialMedico());
+            json.put("alergias", p.getAlergias());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Enviando paciente: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Paciente agregado, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al agregar paciente: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return p;
+        
+        return resultado;
     }
     
-    // BUSCAR por usuario_id
-    public PacientesModel buscarPorUsuarioId(long usuarioId) {
-        PacientesModel p = new PacientesModel();
-        String sql = "SELECT * FROM pacientes WHERE usuario_id = ?";
+    public int Actualizar(PacientesModel p) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, usuarioId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                p.setId(rs.getLong("id"));
-                p.setUsuarioId(rs.getLong("usuario_id"));
-                p.setCodigoPaciente(rs.getString("codigo_paciente"));
-                p.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
-                p.setGenero(rs.getString("genero"));
-                p.setDireccion(rs.getString("direccion"));
-                p.setContactoEmergenciaNombre(rs.getString("contacto_emergencia_nombre"));
-                p.setContactoEmergenciaTelefono(rs.getString("contacto_emergencia_telefono"));
-                p.setHistorialMedico(rs.getString("historial_medico"));
-                p.setAlergias(rs.getString("alergias"));
+            URL url = new URL(BASE_URL + "/modificar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("id", p.getId());
+            json.put("usuarioId", p.getUsuarioId());
+            
+            if (p.getFechaNacimiento() != null) {
+                json.put("fechaNacimiento", p.getFechaNacimiento().toString());
+            }
+            
+            json.put("genero", p.getGenero());
+            json.put("direccion", p.getDireccion());
+            json.put("contactoEmergenciaNombre", p.getContactoEmergenciaNombre());
+            json.put("contactoEmergenciaTelefono", p.getContactoEmergenciaTelefono());
+            json.put("historialMedico", p.getHistorialMedico());
+            json.put("alergias", p.getAlergias());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Actualizando paciente: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Paciente actualizado, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al actualizar paciente: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return p;
-    }
-    
-    // AGREGAR nuevo paciente
-    public boolean agregar(PacientesModel p) {
-        String sql = "INSERT INTO pacientes (usuario_id, codigo_paciente, fecha_nacimiento, genero, " +
-                     "direccion, contacto_emergencia_nombre, contacto_emergencia_telefono, " +
-                     "historial_medico, alergias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, p.getUsuarioId());
-            ps.setString(2, p.getCodigoPaciente());
-            ps.setDate(3, Date.valueOf(p.getFechaNacimiento()));
-            ps.setString(4, p.getGenero());
-            ps.setString(5, p.getDireccion());
-            ps.setString(6, p.getContactoEmergenciaNombre());
-            ps.setString(7, p.getContactoEmergenciaTelefono());
-            ps.setString(8, p.getHistorialMedico());
-            ps.setString(9, p.getAlergias());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ACTUALIZAR paciente
-    public boolean actualizar(PacientesModel p) {
-        String sql = "UPDATE pacientes SET fecha_nacimiento=?, genero=?, direccion=?, " +
-                     "contacto_emergencia_nombre=?, contacto_emergencia_telefono=?, " +
-                     "historial_medico=?, alergias=?, actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setDate(1, Date.valueOf(p.getFechaNacimiento()));
-            ps.setString(2, p.getGenero());
-            ps.setString(3, p.getDireccion());
-            ps.setString(4, p.getContactoEmergenciaNombre());
-            ps.setString(5, p.getContactoEmergenciaTelefono());
-            ps.setString(6, p.getHistorialMedico());
-            ps.setString(7, p.getAlergias());
-            ps.setLong(8, p.getId());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ELIMINAR paciente (soft delete - marcar usuario como inactivo)
-    public boolean eliminar(long id) {
-        String sql = "UPDATE usuarios SET activo=false WHERE id=(SELECT usuario_id FROM pacientes WHERE id=?)";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // BUSCAR pacientes por nombre
-    public List<PacientesModel> buscarPorNombre(String nombre) {
-        List<PacientesModel> lista = new ArrayList<>();
-        String sql = "SELECT p.* FROM pacientes p " +
-                     "JOIN usuarios u ON p.usuario_id = u.id " +
-                     "WHERE LOWER(u.nombre) LIKE LOWER(?) OR LOWER(u.apellido) LIKE LOWER(?)";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + nombre + "%");
-            ps.setString(2, "%" + nombre + "%");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                PacientesModel p = new PacientesModel();
-                p.setId(rs.getLong("id"));
-                p.setUsuarioId(rs.getLong("usuario_id"));
-                p.setCodigoPaciente(rs.getString("codigo_paciente"));
-                p.setFechaNacimiento(rs.getDate("fecha_nacimiento").toLocalDate());
-                p.setGenero(rs.getString("genero"));
-                p.setDireccion(rs.getString("direccion"));
-                p.setContactoEmergenciaNombre(rs.getString("contacto_emergencia_nombre"));
-                p.setContactoEmergenciaTelefono(rs.getString("contacto_emergencia_telefono"));
-                p.setHistorialMedico(rs.getString("historial_medico"));
-                p.setAlergias(rs.getString("alergias"));
-                lista.add(p);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            cerrarConexiones();
-        }
-        return lista;
-    }
-    
-    
-    
-    private void cerrarConexiones() {
-        try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        
+        return resultado;
     }
 }

@@ -76,16 +76,20 @@
                     <a href="dashboard_recepcionista.jsp" class="list-group-item list-group-item-action active">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
-                    <a href="PacientesController?accion=listar" class="list-group-item list-group-item-action">
+                    <!-- Updated Usuarios link to filter only patients -->
+                    <a href="${pageContext.request.contextPath}/UsuariosController?accion=listar&rol=paciente" class="list-group-item list-group-item-action">
+                        <i class="bi bi-person-circle"></i> Usuarios
+                    </a>
+                    <a href="${pageContext.request.contextPath}/PacientesController?accion=listar" class="list-group-item list-group-item-action">
                         <i class="bi bi-people"></i> Pacientes
                     </a>
-                    <a href="CitasController?accion=listar" class="list-group-item list-group-item-action">
+                    <a href="${pageContext.request.contextPath}/CitasController?accion=listar" class="list-group-item list-group-item-action">
                         <i class="bi bi-calendar-check"></i> Citas
                     </a>
-                    <a href="DoctoresController?accion=listar" class="list-group-item list-group-item-action">
+                    <a href="${pageContext.request.contextPath}/DoctoresController?accion=listar" class="list-group-item list-group-item-action">
                         <i class="bi bi-person-badge"></i> Doctores
                     </a>
-                    <a href="MedicamentosController?accion=listar" class="list-group-item list-group-item-action">
+                    <a href="${pageContext.request.contextPath}/MedicamentosController?accion=listar" class="list-group-item list-group-item-action">
                         <i class="bi bi-capsule"></i> Medicamentos
                     </a>
                 </div>
@@ -107,109 +111,41 @@
                     </div>
                 </div>
 
-                <!-- Estadísticas -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card stat-card primary">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Citas Hoy</h6>
-                                    </div>
-                                    <div class="text-primary">
-                                        <i class="bi bi-calendar-check" style="font-size: 3rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card success">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Pacientes Nuevos</h6>
-                                        <h2 class="mb-0">8</h2>
-                                    </div>
-                                    <div class="text-success">
-                                        <i class="bi bi-person-plus" style="font-size: 3rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card warning">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Citas Pendientes</h6>
-                                        <h2 class="mb-0">12</h2>
-                                    </div>
-                                    <div class="text-warning">
-                                        <i class="bi bi-clock-history" style="font-size: 3rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card stat-card danger">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="text-muted mb-2">Stock Bajo</h6>
-                                        <h2 class="mb-0">5</h2>
-                                    </div>
-                                    <div class="text-danger">
-                                        <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Acciones Rápidas -->
                 <div class="row mb-4">
                     <div class="col-12">
                         <h4 class="mb-3">Acciones Rápidas</h4>
                     </div>
-                    <div class="col-md-3">
-                        <div class="quick-action bg-primary text-white" onclick="location.href='UsuariosController?accion=nuevo'">
+                    <div class="col-md-4">
+                        <!-- Updated quick action to filter only patients -->
+                        <div class="quick-action bg-primary text-white" onclick="location.href='${pageContext.request.contextPath}/UsuariosController?accion=listar'">
+                            <div class="text-center">
+                                <i class="bi bi-person-circle" style="font-size: 2.5rem;"></i>
+                                <h5 class="mt-2">Listar Usuarios</h5>
+                                <small>Ver usuarios pacientes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="quick-action bg-success text-white" onclick="location.href='${pageContext.request.contextPath}/UsuariosController?accion=listarpaciente&rol=paciente'">
+                            <div class="text-center">
+                                <i class="bi bi-people-fill" style="font-size: 2.5rem;"></i>
+                                <h5 class="mt-2">Listar Pacientes</h5>
+                                <small>Ver todos los pacientes</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="quick-action bg-info text-white" onclick="location.href='${pageContext.request.contextPath}/UsuariosController?accion=listardoctores&rol=doctor'">
                             <div class="text-center">
                                 <i class="bi bi-person-plus-fill" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-2">Nuevo Paciente</h5>
-                                <small>Crear usuario y paciente</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="quick-action bg-success text-white" onclick="location.href='CitasController?accion=nueva'">
-                            <div class="text-center">
-                                <i class="bi bi-calendar-plus-fill" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-2">Agendar Cita</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="quick-action bg-info text-white" onclick="location.href='PacientesController?accion=listar'">
-                            <div class="text-center">
-                                <i class="bi bi-search" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-2">Buscar Paciente</h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="quick-action bg-warning text-white" onclick="location.href='MedicamentosController?accion=stockBajo'">
-                            <div class="text-center">
-                                <i class="bi bi-capsule" style="font-size: 2.5rem;"></i>
-                                <h5 class="mt-2">Inventario</h5>
+                                <h5 class="mt-2">Agregar Doctor</h5>
+                                <small>Registrar nuevo doctor</small>
                             </div>
                         </div>
                     </div>
                 </div>
-
+          
                 <!-- Citas de Hoy -->
                 <div class="row">
                     <div class="col-md-8">

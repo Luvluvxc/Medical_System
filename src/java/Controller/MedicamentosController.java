@@ -1,44 +1,37 @@
 package Controller;
 
-import Model.MedicamentosModel;
 import DAO.MedicamentosDAO;
-import DAO.UnidadesMedidaDAO;
+import Model.MedicamentosModel;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
+import java.util.List;
 
-@WebServlet(name = "MedicamentosController", urlPatterns = {"/MedicamentosController"})
 public class MedicamentosController extends HttpServlet {
-
-    MedicamentosDAO medicamentosDAO = new MedicamentosDAO();
-    UnidadesMedidaDAO unidadesDAO = new UnidadesMedidaDAO();
+    
+    MedicamentosDAO dao = new MedicamentosDAO();
+    MedicamentosModel medicamento = new MedicamentosModel();
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String accion = request.getParameter("accion");
         
-        if (accion == null) {
-            accion = "listar";
-        }
-        
         switch (accion) {
             case "listar":
                 listar(request, response);
                 break;
             case "nuevo":
-                mostrarFormularioNuevo(request, response);
+                nuevo(request, response);
                 break;
             case "registrar":
                 registrar(request, response);
                 break;
             case "editar":
-                mostrarFormularioEditar(request, response);
+                editar(request, response);
                 break;
             case "actualizar":
                 actualizar(request, response);
@@ -46,197 +39,141 @@ public class MedicamentosController extends HttpServlet {
             case "eliminar":
                 eliminar(request, response);
                 break;
-            case "buscar":
-                buscar(request, response);
-                break;
-            case "stockBajo":
-                listarStockBajo(request, response);
-                break;
-            case "proximosVencer":
-                listarProximosVencer(request, response);
-                break;
-            case "actualizarStock":
-                actualizarStock(request, response);
-                break;
             default:
                 listar(request, response);
                 break;
         }
     }
     
-    private void listar(HttpServletRequest request, HttpServletResponse response)
+    protected void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("medicamentos", medicamentosDAO.listar());
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.getRequestDispatcher("medicamentos_lista.jsp").forward(request, response);
+        try {
+            List<MedicamentosModel> lista = dao.Listar();
+            request.setAttribute("medicamentos", lista);
+            request.getRequestDispatcher("Medicamentos/medicamentos_lista.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al listar medicamentos: " + e.getMessage());
+            request.getRequestDispatcher("Medicamentos/medicamentos_lista.jsp").forward(request, response);
+        }
     }
     
-    private void mostrarFormularioNuevo(HttpServletRequest request, HttpServletResponse response)
+    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.getRequestDispatcher("medicamentos_nuevo.jsp").forward(request, response);
+        request.getRequestDispatcher("Medicamentos/medicamentos_nuevo.jsp").forward(request, response);
     }
     
-    private void registrar(HttpServletRequest request, HttpServletResponse response)
+    protected void registrar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
         try {
             String nombre = request.getParameter("nombre");
-            String nombreGenerico = request.getParameter("nombreGenerico");
-            String marca = request.getParameter("marca");
-            long unidadMedidaId = Long.parseLong(request.getParameter("unidadMedidaId"));
             int cantidadStock = Integer.parseInt(request.getParameter("cantidadStock"));
-            int nivelMinimoStock = Integer.parseInt(request.getParameter("nivelMinimoStock"));
-            BigDecimal precioUnitario = new BigDecimal(request.getParameter("precioUnitario"));
-            LocalDate fechaExpiracion = LocalDate.parse(request.getParameter("fechaExpiracion"));
-            String numeroLote = request.getParameter("numeroLote");
+            double precioUnitario = Double.parseDouble(request.getParameter("precioUnitario"));
+            String fechaExpiracionStr = request.getParameter("fechaExpiracion");
             String descripcion = request.getParameter("descripcion");
             
-            MedicamentosModel m = new MedicamentosModel();
-            m.setNombre(nombre);
-            m.setNombreGenerico(nombreGenerico);
-            m.setMarca(marca);
-            m.setUnidadMedidaId(unidadMedidaId);
-            m.setCantidadStock(cantidadStock);
-            m.setNivelMinimoStock(nivelMinimoStock);
-            m.setPrecioUnitario(precioUnitario);
-            m.setFechaExpiracion(fechaExpiracion);
-            m.setNumeroLote(numeroLote);
-            m.setDescripcion(descripcion);
-            m.setActivo(true);
+            medicamento.setNombre(nombre);
+            medicamento.setCantidadStock(cantidadStock);
+            medicamento.setPrecioUnitario(precioUnitario);
             
-            if (medicamentosDAO.agregar(m)) {
+            if (fechaExpiracionStr != null && !fechaExpiracionStr.trim().isEmpty()) {
+                medicamento.setFechaExpiracion(LocalDate.parse(fechaExpiracionStr));
+            }
+            
+            medicamento.setDescripcion(descripcion);
+            
+            int resultado = dao.Agregar(medicamento);
+            
+            if (resultado > 0) {
                 request.setAttribute("mensaje", "Medicamento registrado exitosamente");
+                listar(request, response);
             } else {
                 request.setAttribute("error", "Error al registrar medicamento");
+                request.getRequestDispatcher("Medicamentos/medicamentos_nuevo.jsp").forward(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error: " + e.getMessage());
+            request.getRequestDispatcher("Medicamentos/medicamentos_nuevo.jsp").forward(request, response);
         }
-        
-        listar(request, response);
     }
     
-    private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response)
+    protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        MedicamentosModel m = medicamentosDAO.buscarPorId(id);
-        
-        request.setAttribute("medicamento", m);
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.getRequestDispatcher("medicamentos_editar.jsp").forward(request, response);
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            MedicamentosModel medicamentoEditar = dao.BuscarPorId(id);
+            
+            if (medicamentoEditar != null) {
+                request.setAttribute("medicamento", medicamentoEditar);
+                request.getRequestDispatcher("Medicamentos/medicamentos_editar.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "Medicamento no encontrado");
+                listar(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar medicamento: " + e.getMessage());
+            listar(request, response);
+        }
     }
     
-    private void actualizar(HttpServletRequest request, HttpServletResponse response)
+    protected void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
         try {
             long id = Long.parseLong(request.getParameter("id"));
             String nombre = request.getParameter("nombre");
-            String nombreGenerico = request.getParameter("nombreGenerico");
-            String marca = request.getParameter("marca");
-            long unidadMedidaId = Long.parseLong(request.getParameter("unidadMedidaId"));
             int cantidadStock = Integer.parseInt(request.getParameter("cantidadStock"));
-            int nivelMinimoStock = Integer.parseInt(request.getParameter("nivelMinimoStock"));
-            BigDecimal precioUnitario = new BigDecimal(request.getParameter("precioUnitario"));
-            LocalDate fechaExpiracion = LocalDate.parse(request.getParameter("fechaExpiracion"));
-            String numeroLote = request.getParameter("numeroLote");
+            double precioUnitario = Double.parseDouble(request.getParameter("precioUnitario"));
+            String fechaExpiracionStr = request.getParameter("fechaExpiracion");
             String descripcion = request.getParameter("descripcion");
-            boolean activo = Boolean.parseBoolean(request.getParameter("activo"));
             
-            MedicamentosModel m = new MedicamentosModel();
-            m.setId(id);
-            m.setNombre(nombre);
-            m.setNombreGenerico(nombreGenerico);
-            m.setMarca(marca);
-            m.setUnidadMedidaId(unidadMedidaId);
-            m.setCantidadStock(cantidadStock);
-            m.setNivelMinimoStock(nivelMinimoStock);
-            m.setPrecioUnitario(precioUnitario);
-            m.setFechaExpiracion(fechaExpiracion);
-            m.setNumeroLote(numeroLote);
-            m.setDescripcion(descripcion);
-            m.setActivo(activo);
+            MedicamentosModel medicamentoActualizar = new MedicamentosModel();
+            medicamentoActualizar.setId(id);
+            medicamentoActualizar.setNombre(nombre);
+            medicamentoActualizar.setCantidadStock(cantidadStock);
+            medicamentoActualizar.setPrecioUnitario(precioUnitario);
             
-            if (medicamentosDAO.actualizar(m)) {
+            if (fechaExpiracionStr != null && !fechaExpiracionStr.trim().isEmpty()) {
+                medicamentoActualizar.setFechaExpiracion(LocalDate.parse(fechaExpiracionStr));
+            }
+            
+            medicamentoActualizar.setDescripcion(descripcion);
+            
+            int resultado = dao.Actualizar(medicamentoActualizar);
+            
+            if (resultado > 0) {
                 request.setAttribute("mensaje", "Medicamento actualizado exitosamente");
             } else {
-                request.setAttribute("error", "Error al actualizar medicamento");
+                request.setAttribute("error", "No se pudo actualizar el medicamento");
             }
+            
+            listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
+            request.setAttribute("error", "Error al actualizar medicamento: " + e.getMessage());
+            listar(request, response);
         }
-        
-        listar(request, response);
     }
     
-    private void eliminar(HttpServletRequest request, HttpServletResponse response)
+    protected void eliminar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        
-        if (medicamentosDAO.eliminar(id)) {
-            request.setAttribute("mensaje", "Medicamento eliminado exitosamente");
-        } else {
-            request.setAttribute("error", "Error al eliminar medicamento");
-        }
-        
-        listar(request, response);
-    }
-    
-    private void buscar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        String nombre = request.getParameter("nombre");
-        request.setAttribute("medicamentos", medicamentosDAO.buscarPorNombre(nombre));
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.getRequestDispatcher("medicamentos_lista.jsp").forward(request, response);
-    }
-    
-    private void listarStockBajo(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setAttribute("medicamentos", medicamentosDAO.listarStockBajo());
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.setAttribute("filtro", "Stock Bajo");
-        request.getRequestDispatcher("medicamentos_lista.jsp").forward(request, response);
-    }
-    
-    private void listarProximosVencer(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        int dias = 30; // Por defecto 30 días
-        String diasParam = request.getParameter("dias");
-        if (diasParam != null && !diasParam.isEmpty()) {
-            dias = Integer.parseInt(diasParam);
-        }
-        
-        request.setAttribute("medicamentos", medicamentosDAO.listarProximosAVencer(dias));
-        request.setAttribute("unidades", unidadesDAO.listar());
-        request.setAttribute("filtro", "Próximos a Vencer (" + dias + " días)");
-        request.getRequestDispatcher("medicamentos_lista.jsp").forward(request, response);
-    }
-    
-    private void actualizarStock(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
         try {
             long id = Long.parseLong(request.getParameter("id"));
-            int nuevaCantidad = Integer.parseInt(request.getParameter("nuevaCantidad"));
+            int resultado = dao.Eliminar(id);
             
-            if (medicamentosDAO.actualizarStock(id, nuevaCantidad)) {
-                request.setAttribute("mensaje", "Stock actualizado exitosamente");
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Medicamento eliminado exitosamente");
             } else {
-                request.setAttribute("error", "Error al actualizar stock");
+                request.setAttribute("error", "No se pudo eliminar el medicamento");
             }
+            
+            listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
+            request.setAttribute("error", "Error al eliminar medicamento: " + e.getMessage());
+            listar(request, response);
         }
-        
-        listar(request, response);
     }
 
     @Override

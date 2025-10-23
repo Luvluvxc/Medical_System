@@ -1,199 +1,223 @@
 package DAO;
 
 import Model.DoctoresModel;
-import Config.Conexion;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class DoctoresDAO {
     
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
+    private static final String BASE_URL = "http://localhost:8080/proyectop/webresources/doctores";
     
-    // LISTAR todos los doctores
-    public List<DoctoresModel> listar() {
+    public List<DoctoresModel> Listar() {
         List<DoctoresModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM doctores ORDER BY creado_en DESC";
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                DoctoresModel d = new DoctoresModel();
-                d.setId(rs.getLong("id"));
-                d.setUsuarioId(rs.getLong("usuario_id"));
-                d.setNumeroLicencia(rs.getString("numero_licencia"));
-                d.setEspecializacion(rs.getString("especializacion"));
-                d.setTarifaConsulta(rs.getBigDecimal("tarifa_consulta"));
-                d.setHorarioInicio(rs.getTime("horario_inicio").toLocalTime());
-                d.setHorarioFin(rs.getTime("horario_fin").toLocalTime());
-                d.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-                d.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
-                lista.add(d);
+            URL url = new URL(BASE_URL + "/lista");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONArray jsonArray = new JSONArray(response.toString());
+                
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    DoctoresModel d = new DoctoresModel();
+                    
+                    d.setId(obj.getLong("id"));
+                    d.setUsuarioId(obj.getInt("usuarioId"));
+                    d.setNumeroLicencia(obj.getString("numeroLicencia"));
+                    d.setEspecializacion(obj.optString("especializacion", ""));
+                    
+                    d.setUsuarioNombre(obj.optString("usuarioNombre", ""));
+                    d.setUsuarioApellido(obj.optString("usuarioApellido", ""));
+                    d.setUsuarioCorreo(obj.optString("usuarioCorreo", ""));
+                    d.setUsuarioTelefono(obj.optString("usuarioTelefono", ""));
+                    d.setUsuarioRol(obj.optString("usuarioRol", ""));
+                    d.setUsuarioActivo(obj.optBoolean("usuarioActivo", true));
+                    
+                    lista.add(d);
+                }
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al listar doctores: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
+        
         return lista;
     }
     
-    // BUSCAR por ID
-    public DoctoresModel buscarPorId(long id) {
-        DoctoresModel d = new DoctoresModel();
-        String sql = "SELECT * FROM doctores WHERE id = ?";
+    public DoctoresModel BuscarPorId(long id) {
+        DoctoresModel doctor = null;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                d.setId(rs.getLong("id"));
-                d.setUsuarioId(rs.getLong("usuario_id"));
-                d.setNumeroLicencia(rs.getString("numero_licencia"));
-                d.setEspecializacion(rs.getString("especializacion"));
-                d.setTarifaConsulta(rs.getBigDecimal("tarifa_consulta"));
-                d.setHorarioInicio(rs.getTime("horario_inicio").toLocalTime());
-                d.setHorarioFin(rs.getTime("horario_fin").toLocalTime());
-                d.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-                d.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
+            URL url = new URL(BASE_URL + "/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                
+                JSONObject obj = new JSONObject(response.toString());
+                doctor = new DoctoresModel();
+                
+                doctor.setId(obj.getLong("id"));
+                doctor.setUsuarioId(obj.getInt("usuarioId"));
+                doctor.setNumeroLicencia(obj.getString("numeroLicencia"));
+                doctor.setEspecializacion(obj.optString("especializacion", ""));
+                
+                doctor.setUsuarioNombre(obj.optString("usuarioNombre", ""));
+                doctor.setUsuarioApellido(obj.optString("usuarioApellido", ""));
+                doctor.setUsuarioCorreo(obj.optString("usuarioCorreo", ""));
+                doctor.setUsuarioTelefono(obj.optString("usuarioTelefono", ""));
+                doctor.setUsuarioRol(obj.optString("usuarioRol", ""));
+                doctor.setUsuarioActivo(obj.optBoolean("usuarioActivo", true));
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al buscar doctor: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return d;
+        
+        return doctor;
     }
     
-    // BUSCAR por usuario_id
-    public DoctoresModel buscarPorUsuarioId(long usuarioId) {
-        DoctoresModel d = new DoctoresModel();
-        String sql = "SELECT * FROM doctores WHERE usuario_id = ?";
+    public int Agregar(DoctoresModel d) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, usuarioId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                d.setId(rs.getLong("id"));
-                d.setUsuarioId(rs.getLong("usuario_id"));
-                d.setNumeroLicencia(rs.getString("numero_licencia"));
-                d.setEspecializacion(rs.getString("especializacion"));
-                d.setTarifaConsulta(rs.getBigDecimal("tarifa_consulta"));
-                d.setHorarioInicio(rs.getTime("horario_inicio").toLocalTime());
-                d.setHorarioFin(rs.getTime("horario_fin").toLocalTime());
+            URL url = new URL(BASE_URL + "/agregar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("usuarioId", d.getUsuarioId());
+            json.put("numeroLicencia", d.getNumeroLicencia());
+            json.put("especializacion", d.getEspecializacion());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Enviando doctor: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Doctor agregado, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al agregar doctor: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return d;
+        
+        return resultado;
     }
     
-    // AGREGAR nuevo doctor
-    public boolean agregar(DoctoresModel d) {
-        String sql = "INSERT INTO doctores (usuario_id, numero_licencia, especializacion, " +
-                     "tarifa_consulta, horario_inicio, horario_fin) VALUES (?, ?, ?, ?, ?, ?)";
+    public int Actualizar(DoctoresModel d) {
+        int resultado = 0;
+        
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, d.getUsuarioId());
-            ps.setString(2, d.getNumeroLicencia());
-            ps.setString(3, d.getEspecializacion());
-            ps.setBigDecimal(4, d.getTarifaConsulta());
-            ps.setTime(5, Time.valueOf(d.getHorarioInicio()));
-            ps.setTime(6, Time.valueOf(d.getHorarioFin()));
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ACTUALIZAR doctor
-    public boolean actualizar(DoctoresModel d) {
-        String sql = "UPDATE doctores SET numero_licencia=?, especializacion=?, tarifa_consulta=?, " +
-                     "horario_inicio=?, horario_fin=?, actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, d.getNumeroLicencia());
-            ps.setString(2, d.getEspecializacion());
-            ps.setBigDecimal(3, d.getTarifaConsulta());
-            ps.setTime(4, Time.valueOf(d.getHorarioInicio()));
-            ps.setTime(5, Time.valueOf(d.getHorarioFin()));
-            ps.setLong(6, d.getId());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ELIMINAR doctor (soft delete)
-    public boolean eliminar(long id) {
-        String sql = "UPDATE usuarios SET activo=false WHERE id=(SELECT usuario_id FROM doctores WHERE id=?)";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // LISTAR doctores por especialización
-    public List<DoctoresModel> listarPorEspecializacion(String especializacion) {
-        List<DoctoresModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM doctores WHERE LOWER(especializacion) LIKE LOWER(?)";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + especializacion + "%");
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                DoctoresModel d = new DoctoresModel();
-                d.setId(rs.getLong("id"));
-                d.setUsuarioId(rs.getLong("usuario_id"));
-                d.setNumeroLicencia(rs.getString("numero_licencia"));
-                d.setEspecializacion(rs.getString("especializacion"));
-                d.setTarifaConsulta(rs.getBigDecimal("tarifa_consulta"));
-                d.setHorarioInicio(rs.getTime("horario_inicio").toLocalTime());
-                d.setHorarioFin(rs.getTime("horario_fin").toLocalTime());
-                lista.add(d);
+            URL url = new URL(BASE_URL + "/modificar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+            
+            JSONObject json = new JSONObject();
+            json.put("id", d.getId());
+            json.put("usuarioId", d.getUsuarioId());
+            json.put("numeroLicencia", d.getNumeroLicencia());
+            json.put("especializacion", d.getEspecializacion());
+            
+            String jsonString = json.toString();
+            System.out.println("[v0] Actualizando doctor: " + jsonString);
+            
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+            
+            int responseCode = con.getResponseCode();
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Doctor actualizado, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al actualizar doctor: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return lista;
+        
+        return resultado;
     }
     
-    private void cerrarConexiones() {
+    public int Eliminar(long id) {
+        int resultado = 0;
+        
         try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            URL url = new URL(BASE_URL + "/eliminar/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("DELETE");
+            con.setRequestProperty("Accept", "application/json");
+            
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta eliminar: " + responseCode);
+            
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+                
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Doctor eliminado, resultado: " + resultado);
+            }
+        } catch (Exception e) {
+            System.out.println("[v0] Error al eliminar doctor: " + e.getMessage());
+            e.printStackTrace();
         }
+        
+        return resultado;
     }
 }

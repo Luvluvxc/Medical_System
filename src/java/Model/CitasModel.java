@@ -1,31 +1,30 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Model;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.LocalDateTime;
 
 public class CitasModel {
-    private long id;
-    private long pacienteId;
-    private long doctorId;
+    private Long id;
+    private Integer pacienteId;
+    private Integer doctorId;
     private LocalDate fechaCita;
     private LocalTime horaCita;
     private String estado;
     private String motivo;
-    private String notas;
-    private Long creadoPor;
-    private LocalDateTime creadoEn;
-    private LocalDateTime actualizadoEn;
+    
+    // Additional fields for joined data
+    private String pacienteNombre;
+    private String pacienteApellido;
+    private String doctorNombre;
+    private String doctorApellido;
+    private String doctorEspecializacion;
 
-    // Constructores, Getters y Setters
-    public CitasModel() {}
+    // Constructors
+    public CitasModel() {
+    }
 
-    public CitasModel(long id, long pacienteId, long doctorId, LocalDate fechaCita, LocalTime horaCita,
-                String estado, String motivo, String notas, Long creadoPor,
-                LocalDateTime creadoEn, LocalDateTime actualizadoEn) {
+    public CitasModel(Long id, Integer pacienteId, Integer doctorId, LocalDate fechaCita, 
+                     LocalTime horaCita, String estado, String motivo) {
         this.id = id;
         this.pacienteId = pacienteId;
         this.doctorId = doctorId;
@@ -33,43 +32,102 @@ public class CitasModel {
         this.horaCita = horaCita;
         this.estado = estado;
         this.motivo = motivo;
-        this.notas = notas;
-        this.creadoPor = creadoPor;
-        this.creadoEn = creadoEn;
-        this.actualizadoEn = actualizadoEn;
     }
 
-    // Getters y Setters
-    public long getId() { return id; }
-    public void setId(long id) { this.id = id; }
-    
-    public long getPacienteId() { return pacienteId; }
-    public void setPacienteId(long pacienteId) { this.pacienteId = pacienteId; }
-    
-    public long getDoctorId() { return doctorId; }
-    public void setDoctorId(long doctorId) { this.doctorId = doctorId; }
-    
-    public LocalDate getFechaCita() { return fechaCita; }
-    public void setFechaCita(LocalDate fechaCita) { this.fechaCita = fechaCita; }
-    
-    public LocalTime getHoraCita() { return horaCita; }
-    public void setHoraCita(LocalTime horaCita) { this.horaCita = horaCita; }
-    
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
-    
-    public String getMotivo() { return motivo; }
-    public void setMotivo(String motivo) { this.motivo = motivo; }
-    
-    public String getNotas() { return notas; }
-    public void setNotas(String notas) { this.notas = notas; }
-    
-    public Long getCreadoPor() { return creadoPor; }
-    public void setCreadoPor(Long creadoPor) { this.creadoPor = creadoPor; }
-    
-    public LocalDateTime getCreadoEn() { return creadoEn; }
-    public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
-    
-    public LocalDateTime getActualizadoEn() { return actualizadoEn; }
-    public void setActualizadoEn(LocalDateTime actualizadoEn) { this.actualizadoEn = actualizadoEn; }
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Integer getPacienteId() {
+        return pacienteId;
+    }
+
+    public void setPacienteId(Integer pacienteId) {
+        this.pacienteId = pacienteId;
+    }
+
+    public Integer getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(Integer doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public LocalDate getFechaCita() {
+        return fechaCita;
+    }
+
+    public void setFechaCita(LocalDate fechaCita) {
+        this.fechaCita = fechaCita;
+    }
+
+    public LocalTime getHoraCita() {
+        return horaCita;
+    }
+
+    public void setHoraCita(LocalTime horaCita) {
+        this.horaCita = horaCita;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
+    }
+
+    public String getPacienteNombre() {
+        return pacienteNombre;
+    }
+
+    public void setPacienteNombre(String pacienteNombre) {
+        this.pacienteNombre = pacienteNombre;
+    }
+
+    public String getPacienteApellido() {
+        return pacienteApellido;
+    }
+
+    public void setPacienteApellido(String pacienteApellido) {
+        this.pacienteApellido = pacienteApellido;
+    }
+
+    public String getDoctorNombre() {
+        return doctorNombre;
+    }
+
+    public void setDoctorNombre(String doctorNombre) {
+        this.doctorNombre = doctorNombre;
+    }
+
+    public String getDoctorApellido() {
+        return doctorApellido;
+    }
+
+    public void setDoctorApellido(String doctorApellido) {
+        this.doctorApellido = doctorApellido;
+    }
+
+    public String getDoctorEspecializacion() {
+        return doctorEspecializacion;
+    }
+
+    public void setDoctorEspecializacion(String doctorEspecializacion) {
+        this.doctorEspecializacion = doctorEspecializacion;
+    }
 }

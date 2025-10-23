@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    
+    <servlet>
+        <servlet-name>UsuariosController</servlet-name>
+        <servlet-class>Controller.UsuariosController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>UsuariosController</servlet-name>
+        <url-pattern>/UsuariosController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>PacientesController</servlet-name>
+        <servlet-class>Controller.PacientesController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>PacientesController</servlet-name>
+        <url-pattern>/PacientesController</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Adding new controllers for Doctores, Citas, Consultas, Medicamentos -->
+    <servlet>
+        <servlet-name>DoctoresController</servlet-name>
+        <servlet-class>Controller.DoctoresController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>DoctoresController</servlet-name>
+        <url-pattern>/DoctoresController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>CitasController</servlet-name>
+        <servlet-class>Controller.CitasController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>CitasController</servlet-name>
+        <url-pattern>/CitasController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>ConsultasController</servlet-name>
+        <servlet-class>Controller.ConsultasController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>ConsultasController</servlet-name>
+        <url-pattern>/ConsultasController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>MedicamentosController</servlet-name>
+        <servlet-class>Controller.MedicamentosController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>MedicamentosController</servlet-name>
+        <url-pattern>/MedicamentosController</url-pattern>
+    </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>DashboardController</servlet-name>
+        <servlet-class>Controller.DashboardController</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>DashboardController</servlet-name>
+        <url-pattern>/DashboardController</url-pattern>
+    </servlet-mapping>
+    
+    <session-config>
+        <session-timeout>
+            30
+        </session-timeout>
+    </session-config>
+    
+</web-app>

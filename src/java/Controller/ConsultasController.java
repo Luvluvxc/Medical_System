@@ -1,87 +1,200 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package Controller;
 
+import DAO.ConsultasDAO;
+import Model.ConsultasModel;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
-/**
- *
- * @author marli
- */
-@WebServlet(name = "ConsultasController", urlPatterns = {"/ConsultasController"})
 public class ConsultasController extends HttpServlet {
-
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
+    
+    ConsultasDAO dao = new ConsultasDAO();
+    ConsultasModel consulta = new ConsultasModel();
+    
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet ConsultasController</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet ConsultasController at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+        
+        String accion = request.getParameter("accion");
+        
+        switch (accion) {
+            case "listar":
+                listar(request, response);
+                break;
+            case "nuevo":
+                nuevo(request, response);
+                break;
+            case "registrar":
+                registrar(request, response);
+                break;
+            case "editar":
+                editar(request, response);
+                break;
+            case "actualizar":
+                actualizar(request, response);
+                break;
+            case "eliminar":
+                eliminar(request, response);
+                break;
+            case "buscarPorCita":
+                buscarPorCita(request, response);
+                break;
+            default:
+                listar(request, response);
+                break;
+        }
+    }
+    
+    protected void listar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            List<ConsultasModel> lista = dao.Listar();
+            request.setAttribute("consultas", lista);
+            request.getRequestDispatcher("Consultas/consultas_lista.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al listar consultas: " + e.getMessage());
+            request.getRequestDispatcher("Consultas/consultas_lista.jsp").forward(request, response);
+        }
+    }
+    
+    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("Consultas/consultas_nuevo.jsp").forward(request, response);
+    }
+    
+    protected void registrar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int citaId = Integer.parseInt(request.getParameter("citaId"));
+            String diagnostico = request.getParameter("diagnostico");
+            String planTratamiento = request.getParameter("planTratamiento");
+            String observaciones = request.getParameter("observaciones");
+            
+            consulta.setCitaId(citaId);
+            consulta.setDiagnostico(diagnostico);
+            consulta.setPlanTratamiento(planTratamiento);
+            consulta.setObservaciones(observaciones);
+            
+            int resultado = dao.Agregar(consulta);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Consulta registrada exitosamente");
+                listar(request, response);
+            } else {
+                request.setAttribute("error", "Error al registrar consulta");
+                request.getRequestDispatcher("Consultas/consultas_nuevo.jsp").forward(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error: " + e.getMessage());
+            request.getRequestDispatcher("Consultas/consultas_nuevo.jsp").forward(request, response);
+        }
+    }
+    
+    protected void editar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            ConsultasModel consultaEditar = dao.BuscarPorId(id);
+            
+            if (consultaEditar != null) {
+                request.setAttribute("consulta", consultaEditar);
+                request.getRequestDispatcher("Consultas/consultas_editar.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "Consulta no encontrada");
+                listar(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar consulta: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void actualizar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            int citaId = Integer.parseInt(request.getParameter("citaId"));
+            String diagnostico = request.getParameter("diagnostico");
+            String planTratamiento = request.getParameter("planTratamiento");
+            String observaciones = request.getParameter("observaciones");
+            
+            ConsultasModel consultaActualizar = new ConsultasModel();
+            consultaActualizar.setId(id);
+            consultaActualizar.setCitaId(citaId);
+            consultaActualizar.setDiagnostico(diagnostico);
+            consultaActualizar.setPlanTratamiento(planTratamiento);
+            consultaActualizar.setObservaciones(observaciones);
+            
+            int resultado = dao.Actualizar(consultaActualizar);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Consulta actualizada exitosamente");
+            } else {
+                request.setAttribute("error", "No se pudo actualizar la consulta");
+            }
+            
+            listar(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al actualizar consulta: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void eliminar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            int resultado = dao.Eliminar(id);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Consulta eliminada exitosamente");
+            } else {
+                request.setAttribute("error", "No se pudo eliminar la consulta");
+            }
+            
+            listar(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al eliminar consulta: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void buscarPorCita(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            int citaId = Integer.parseInt(request.getParameter("citaId"));
+            ConsultasModel consultaBuscada = dao.BuscarPorCitaId(citaId);
+            
+            if (consultaBuscada != null) {
+                request.setAttribute("consulta", consultaBuscada);
+                request.getRequestDispatcher("Consultas/consultas_detalle.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "No se encontró consulta para esta cita");
+                listar(request, response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al buscar consulta: " + e.getMessage());
+            listar(request, response);
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
 }

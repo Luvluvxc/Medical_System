@@ -32,10 +32,7 @@ public class ApplicationConfig extends Application {
         resources.add(servicio.API.Consultas.class);
         resources.add(servicio.API.Doctores.class);
         resources.add(servicio.API.Medicamentos.class);
-        resources.add(servicio.API.MovimientosInventario.class);
         resources.add(servicio.API.Pacientes.class);
-        resources.add(servicio.API.Prescripciones.class);
-        resources.add(servicio.API.UnidadesDeMedida.class);
         resources.add(servicio.API.Usuarios.class);
     }
     

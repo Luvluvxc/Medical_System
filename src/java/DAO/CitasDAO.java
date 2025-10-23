@@ -1,251 +1,267 @@
 package DAO;
 
 import Model.CitasModel;
-import Config.Conexion;
-import java.sql.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class CitasDAO {
-    
-    Conexion cn = new Conexion();
-    Connection con;
-    PreparedStatement ps;
-    ResultSet rs;
-    
-    // LISTAR todas las citas
-    public List<CitasModel> listar() {
+
+    private static final String BASE_URL = "http://localhost:8080/proyectop/webresources/citas";
+
+    public List<CitasModel> Listar() {
         List<CitasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM citas ORDER BY fecha_cita DESC, hora_cita DESC";
+
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                CitasModel c = mapearCita(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/lista");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+
+            int responseCode = con.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                JSONArray jsonArray = new JSONArray(response.toString());
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject obj = jsonArray.getJSONObject(i);
+                    CitasModel cita = new CitasModel();
+
+                    cita.setId(obj.getLong("id"));
+                    cita.setPacienteId(obj.getInt("pacienteId"));
+                    cita.setDoctorId(obj.getInt("doctorId"));
+
+                    if (obj.has("fechaCita") && !obj.isNull("fechaCita")) {
+                        cita.setFechaCita(LocalDate.parse(obj.getString("fechaCita")));
+                    }
+
+                    if (obj.has("horaCita") && !obj.isNull("horaCita")) {
+                        cita.setHoraCita(LocalTime.parse(obj.getString("horaCita")));
+                    }
+
+                    cita.setEstado(obj.optString("estado", ""));
+                    cita.setMotivo(obj.optString("motivo", ""));
+
+                    cita.setPacienteNombre(obj.optString("pacienteNombre", ""));
+                    cita.setPacienteApellido(obj.optString("pacienteApellido", ""));
+                    cita.setDoctorNombre(obj.optString("doctorNombre", ""));
+                    cita.setDoctorApellido(obj.optString("doctorApellido", ""));
+                    cita.setDoctorEspecializacion(obj.optString("doctorEspecializacion", ""));
+
+                    lista.add(cita);
+                }
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al listar citas: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
+
         return lista;
     }
-    
-    // BUSCAR por ID
-    public CitasModel buscarPorId(long id) {
-        CitasModel c = new CitasModel();
-        String sql = "SELECT * FROM citas WHERE id = ?";
+
+    public CitasModel BuscarPorId(long id) {
+        CitasModel cita = null;
+
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                c = mapearCita(rs);
+            URL url = new URL(BASE_URL + "/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("Accept", "application/json");
+
+            int responseCode = con.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                JSONObject obj = new JSONObject(response.toString());
+                cita = new CitasModel();
+
+                cita.setId(obj.getLong("id"));
+                cita.setPacienteId(obj.getInt("pacienteId"));
+                cita.setDoctorId(obj.getInt("doctorId"));
+
+                if (obj.has("fechaCita") && !obj.isNull("fechaCita")) {
+                    cita.setFechaCita(LocalDate.parse(obj.getString("fechaCita")));
+                }
+
+                if (obj.has("horaCita") && !obj.isNull("horaCita")) {
+                    cita.setHoraCita(LocalTime.parse(obj.getString("horaCita")));
+                }
+
+                cita.setEstado(obj.optString("estado", ""));
+                cita.setMotivo(obj.optString("motivo", ""));
+
+                cita.setPacienteNombre(obj.optString("pacienteNombre", ""));
+                cita.setPacienteApellido(obj.optString("pacienteApellido", ""));
+                cita.setDoctorNombre(obj.optString("doctorNombre", ""));
+                cita.setDoctorApellido(obj.optString("doctorApellido", ""));
+                cita.setDoctorEspecializacion(obj.optString("doctorEspecializacion", ""));
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al buscar cita: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return c;
+
+        return cita;
     }
-    
-    // AGREGAR nueva cita
-    public boolean agregar(CitasModel c) {
-        String sql = "INSERT INTO citas (paciente_id, doctor_id, fecha_cita, hora_cita, " +
-                     "estado, motivo, notas, creado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+    public int Agregar(CitasModel cita) {
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, c.getPacienteId());
-            ps.setLong(2, c.getDoctorId());
-            ps.setDate(3, Date.valueOf(c.getFechaCita()));
-            ps.setTime(4, Time.valueOf(c.getHoraCita()));
-            ps.setString(5, c.getEstado());
-            ps.setString(6, c.getMotivo());
-            ps.setString(7, c.getNotas());
-            ps.setLong(8, c.getCreadoPor());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ACTUALIZAR cita
-    public boolean actualizar(CitasModel c) {
-        String sql = "UPDATE citas SET paciente_id=?, doctor_id=?, fecha_cita=?, hora_cita=?, " +
-                     "estado=?, motivo=?, notas=?, actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, c.getPacienteId());
-            ps.setLong(2, c.getDoctorId());
-            ps.setDate(3, Date.valueOf(c.getFechaCita()));
-            ps.setTime(4, Time.valueOf(c.getHoraCita()));
-            ps.setString(5, c.getEstado());
-            ps.setString(6, c.getMotivo());
-            ps.setString(7, c.getNotas());
-            ps.setLong(8, c.getId());
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // CAMBIAR ESTADO de la cita
-    public boolean cambiarEstado(long id, String nuevoEstado) {
-        String sql = "UPDATE citas SET estado=?, actualizado_en=CURRENT_TIMESTAMP WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, nuevoEstado);
-            ps.setLong(2, id);
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // ELIMINAR cita
-    public boolean eliminar(long id) {
-        String sql = "DELETE FROM citas WHERE id=?";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, id);
-            ps.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            cerrarConexiones();
-        }
-    }
-    
-    // LISTAR citas por paciente
-    public List<CitasModel> listarPorPaciente(long pacienteId) {
-        List<CitasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM citas WHERE paciente_id = ? ORDER BY fecha_cita DESC, hora_cita DESC";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, pacienteId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                CitasModel c = mapearCita(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/agregar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Accept", "application/json");
+            con.setDoOutput(true);
+
+            JSONObject jsonCita = new JSONObject();
+            jsonCita.put("pacienteId", cita.getPacienteId());
+            jsonCita.put("doctorId", cita.getDoctorId());
+            jsonCita.put("fechaCita", cita.getFechaCita().toString());
+            jsonCita.put("horaCita", cita.getHoraCita().toString());
+            jsonCita.put("estado", cita.getEstado());
+            jsonCita.put("motivo", cita.getMotivo());
+
+            System.out.println("[v0] DAO enviando JSON: " + jsonCita.toString());
+
+            try (OutputStream os = con.getOutputStream()) {
+                byte[] input = jsonCita.toString().getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta: " + responseCode);
+
+            if (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_CREATED) {
+                // <CHANGE> Leer la respuesta JSON
+                BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream(), "utf-8"));
+                StringBuilder response = new StringBuilder();
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
+                }
+                br.close();
+
+                System.out.println("[v0] Respuesta de la API: " + response.toString());
+
+                // <CHANGE> Parsear el JSON de respuesta
+                JSONObject jsonResponse = new JSONObject(response.toString());
+                int result = jsonResponse.getInt("result");
+
+                System.out.println("[v0] Cita agregada, resultado: " + result);
+                return result;
+            } else {
+                System.out.println("[v0] Error: código de respuesta " + responseCode);
+                return 0;
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al agregar cita: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
+            return 0;
         }
-        return lista;
     }
-    
-    // LISTAR citas por doctor
-    public List<CitasModel> listarPorDoctor(long doctorId) {
-        List<CitasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM citas WHERE doctor_id = ? ORDER BY fecha_cita DESC, hora_cita DESC";
+
+    public int Actualizar(CitasModel cita) {
+        int resultado = 0;
+
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setLong(1, doctorId);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                CitasModel c = mapearCita(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/modificar");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("PUT");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setDoOutput(true);
+
+            JSONObject json = new JSONObject();
+            json.put("id", cita.getId());
+            json.put("pacienteId", cita.getPacienteId());
+            json.put("doctorId", cita.getDoctorId());
+
+            if (cita.getFechaCita() != null) {
+                json.put("fechaCita", cita.getFechaCita().toString());
+            }
+
+            if (cita.getHoraCita() != null) {
+                json.put("horaCita", cita.getHoraCita().toString());
+            }
+
+            json.put("estado", cita.getEstado());
+            json.put("motivo", cita.getMotivo());
+
+            String jsonString = json.toString();
+            System.out.println("[v0] Actualizando cita: " + jsonString);
+
+            OutputStream os = con.getOutputStream();
+            os.write(jsonString.getBytes("UTF-8"));
+            os.flush();
+            os.close();
+
+            int responseCode = con.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Cita actualizada, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al actualizar cita: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return lista;
+
+        return resultado;
     }
-    
-    // LISTAR citas por fecha
-    public List<CitasModel> listarPorFecha(Date fecha) {
-        List<CitasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM citas WHERE fecha_cita = ? ORDER BY hora_cita";
+
+    public int Eliminar(long id) {
+        int resultado = 0;
+
         try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setDate(1, fecha);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                CitasModel c = mapearCita(rs);
-                lista.add(c);
+            URL url = new URL(BASE_URL + "/eliminar/" + id);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("DELETE");
+            con.setRequestProperty("Accept", "application/json");
+
+            int responseCode = con.getResponseCode();
+            System.out.println("[v0] Código de respuesta eliminar: " + responseCode);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String response = in.readLine();
+                in.close();
+
+                resultado = Integer.parseInt(response);
+                System.out.println("[v0] Cita eliminada, resultado: " + resultado);
             }
         } catch (Exception e) {
+            System.out.println("[v0] Error al eliminar cita: " + e.getMessage());
             e.printStackTrace();
-        } finally {
-            cerrarConexiones();
         }
-        return lista;
-    }
-    
-    // LISTAR citas por estado
-    public List<CitasModel> listarPorEstado(String estado) {
-        List<CitasModel> lista = new ArrayList<>();
-        String sql = "SELECT * FROM citas WHERE estado = ? ORDER BY fecha_cita DESC, hora_cita DESC";
-        try {
-            con = cn.getConnection();
-            ps = con.prepareStatement(sql);
-            ps.setString(1, estado);
-            rs = ps.executeQuery();
-            while (rs.next()) {
-                CitasModel c = mapearCita(rs);
-                lista.add(c);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            cerrarConexiones();
-        }
-        return lista;
-    }
-    
-    // Método auxiliar para mapear ResultSet a CitasModel
-    private CitasModel mapearCita(ResultSet rs) throws SQLException {
-        CitasModel c = new CitasModel();
-        c.setId(rs.getLong("id"));
-        c.setPacienteId(rs.getLong("paciente_id"));
-        c.setDoctorId(rs.getLong("doctor_id"));
-        c.setFechaCita(rs.getDate("fecha_cita").toLocalDate());
-        c.setHoraCita(rs.getTime("hora_cita").toLocalTime());
-        c.setEstado(rs.getString("estado"));
-        c.setMotivo(rs.getString("motivo"));
-        c.setNotas(rs.getString("notas"));
-        c.setCreadoPor(rs.getLong("creado_por"));
-        c.setCreadoEn(rs.getTimestamp("creado_en").toLocalDateTime());
-        c.setActualizadoEn(rs.getTimestamp("actualizado_en").toLocalDateTime());
-        return c;
-    }
-    
-    private void cerrarConexiones() {
-        try {
-            if (rs != null) rs.close();
-            if (ps != null) ps.close();
-            if (con != null) con.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+
+        return resultado;
     }
 }

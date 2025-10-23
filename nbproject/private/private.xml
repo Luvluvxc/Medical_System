@@ -3,7 +3,37 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/index.html</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/dashboard_recepcionista.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/UsuariosController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/PacientesController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/DoctoresController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/ConsultasController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/CitasController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/pacientes_nuevo.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/pacientes_editar.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/pacientes_lista.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Usuarios/usuarios_nuevo.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Usuarios/usuarios_lista.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Usuarios/usuarios_editar.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Doctores/doctores_nuevo.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Citas/citas_nuevo.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Model/DoctoresModel.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/DAO/DoctoresDAO.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Citas/citas_editar.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Citas/citas_lista.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Doctores/doctores_editar.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Doctores/doctores_lista.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/pacientes_ver.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Model/MedicamentosModel.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Doctores/usuarios_doctores.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/pacientes_usuarios.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Controller/MedicamentosController.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Model/CitasModel.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/Model/ConsultasModel.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/DAO/CitasDAO.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/web/Pacientes/paciente_crear_cita.jsp</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/servicio/API/Citas.java</file>
+            <file>file:/C:/Users/marli/OneDrive/Documentos/NetBeansProjects/proyectop/src/java/servicio/API/Consultas.java</file>
         </group>
     </open-files>
 </project-private>

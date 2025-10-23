@@ -1,65 +1,51 @@
 package Controller;
-import Model.UsuariosResourse;
-import Model.CitasModel;
+
 import DAO.CitasDAO;
 import DAO.PacientesDAO;
 import DAO.DoctoresDAO;
+import Model.CitasModel;
+import Model.PacientesModel;
+import Model.DoctoresModel;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
-@WebServlet(name = "CitasController", urlPatterns = {"/CitasController"})
 public class CitasController extends HttpServlet {
-
-    CitasDAO citasDAO = new CitasDAO();
-    PacientesDAO pacientesDAO = new PacientesDAO();
-    DoctoresDAO doctoresDAO = new DoctoresDAO();
+    
+    CitasDAO dao = new CitasDAO();
+    CitasModel cita = new CitasModel();
     
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String accion = request.getParameter("accion");
         
-        if (accion == null) {
-            accion = "listar";
-        }
-        
         switch (accion) {
             case "listar":
                 listar(request, response);
                 break;
-            case "nueva":
-                mostrarFormularioNueva(request, response);
+            case "nuevo":
+                nuevo(request, response);
                 break;
             case "registrar":
-                registrarCita(request, response);
+                registrar(request, response);
                 break;
             case "editar":
-                mostrarFormularioEditar(request, response);
+                editar(request, response);
                 break;
             case "actualizar":
                 actualizar(request, response);
                 break;
-            case "cambiarEstado":
-                cambiarEstado(request, response);
-                break;
             case "eliminar":
                 eliminar(request, response);
                 break;
-            case "listarPorPaciente":
-                listarPorPaciente(request, response);
-                break;
-            case "listarPorDoctor":
-                listarPorDoctor(request, response);
-                break;
-            case "listarPorFecha":
-                listarPorFecha(request, response);
+            case "nuevoPaciente":
+                nuevoPaciente(request, response);
                 break;
             default:
                 listar(request, response);
@@ -67,168 +53,224 @@ public class CitasController extends HttpServlet {
         }
     }
     
-    // LISTAR todas las citas
-    private void listar(HttpServletRequest request, HttpServletResponse response)
+    protected void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("citas", citasDAO.listar());
-        request.setAttribute("pacientes", pacientesDAO.listar());
-        request.setAttribute("doctores", doctoresDAO.listar());
-        request.getRequestDispatcher("citas_lista.jsp").forward(request, response);
-    }
-    
-    // MOSTRAR formulario para nueva cita
-    private void mostrarFormularioNueva(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setAttribute("pacientes", pacientesDAO.listar());
-        request.setAttribute("doctores", doctoresDAO.listar());
-        request.getRequestDispatcher("citas_nueva.jsp").forward(request, response);
-    }
-    
-    // REGISTRAR NUEVA CITA (Caso de uso: Recepcionista registra cita)
-    private void registrarCita(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
         try {
-            HttpSession session = request.getSession();
-            UsuariosResourse usuario = (UsuariosResourse) session.getAttribute("usuario");
+            List<CitasModel> lista = dao.Listar();
+            request.setAttribute("citas", lista);
+            request.getRequestDispatcher("Citas/citas_lista.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al listar citas: " + e.getMessage());
+            request.getRequestDispatcher("Citas/citas_lista.jsp").forward(request, response);
+        }
+    }
+    
+    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            PacientesDAO pacientesDao = new PacientesDAO();
+            DoctoresDAO doctoresDao = new DoctoresDAO();
             
-            long pacienteId = Long.parseLong(request.getParameter("pacienteId"));
-            long doctorId = Long.parseLong(request.getParameter("doctorId"));
-            LocalDate fechaCita = LocalDate.parse(request.getParameter("fechaCita"));
-            LocalTime horaCita = LocalTime.parse(request.getParameter("horaCita"));
-            String motivo = request.getParameter("motivo");
-            String notas = request.getParameter("notas");
+            String pacienteIdParam = request.getParameter("pacienteId");
+            if (pacienteIdParam != null && !pacienteIdParam.isEmpty()) {
+                long pacienteId = Long.parseLong(pacienteIdParam);
+                PacientesModel pacienteSeleccionado = pacientesDao.BuscarPorId(pacienteId);
+                request.setAttribute("pacienteSeleccionado", pacienteSeleccionado);
+            }
             
-            CitasModel c = new CitasModel();
-            c.setPacienteId(pacienteId);
-            c.setDoctorId(doctorId);
-            c.setFechaCita(fechaCita);
-            c.setHoraCita(horaCita);
-            c.setEstado("programada");
-            c.setMotivo(motivo);
-            c.setNotas(notas);
-            c.setCreadoPor(usuario != null ? usuario.getId() : 1L);
+            List<PacientesModel> pacientes = pacientesDao.Listar();
+            List<DoctoresModel> doctores = doctoresDao.Listar();
             
-            if (citasDAO.agregar(c)) {
-                request.setAttribute("mensaje", "Cita registrada exitosamente");
+            request.setAttribute("pacientes", pacientes);
+            request.setAttribute("doctores", doctores);
+            request.getRequestDispatcher("Citas/citas_nuevo.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar formulario: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void registrar(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        System.out.println("[v0] === INICIANDO REGISTRO DE CITA ===");
+        
+        // Obtener y validar parámetros
+        String pacienteIdStr = request.getParameter("pacienteId");
+        String doctorIdStr = request.getParameter("doctorId");
+        String fechaCitaStr = request.getParameter("fechaCita");
+        String horaCitaStr = request.getParameter("horaCita");
+        String estado = request.getParameter("estado");
+        String motivo = request.getParameter("motivo");
+        
+        System.out.println("[v0] Parámetros recibidos:");
+        System.out.println("[v0]   - pacienteId: " + pacienteIdStr);
+        System.out.println("[v0]   - doctorId: " + doctorIdStr);
+        System.out.println("[v0]   - fechaCita: " + fechaCitaStr);
+        System.out.println("[v0]   - horaCita: " + horaCitaStr);
+        System.out.println("[v0]   - estado: " + estado);
+        System.out.println("[v0]   - motivo: " + motivo);
+        
+        // Validar que no sean nulos
+        if (pacienteIdStr == null || doctorIdStr == null || fechaCitaStr == null || 
+            horaCitaStr == null || estado == null || motivo == null) {
+            System.out.println("[v0] ERROR: Parámetros faltantes");
+            request.setAttribute("error", "Todos los campos son obligatorios");
+            nuevo(request, response);
+            return;
+        }
+        
+        int pacienteId = Integer.parseInt(pacienteIdStr);
+        int doctorId = Integer.parseInt(doctorIdStr);
+        LocalDate fechaCita = LocalDate.parse(fechaCitaStr);
+        LocalTime horaCita = LocalTime.parse(horaCitaStr);
+        
+        System.out.println("[v0] Datos parseados correctamente");
+        
+        cita.setPacienteId(pacienteId);
+        cita.setDoctorId(doctorId);
+        cita.setFechaCita(fechaCita);
+        cita.setHoraCita(horaCita);
+        cita.setEstado(estado);
+        cita.setMotivo(motivo);
+        
+        System.out.println("[v0] Llamando a dao.Agregar()...");
+        int resultado = dao.Agregar(cita);
+        System.out.println("[v0] Resultado del DAO: " + resultado);
+        
+        if (resultado > 0) {
+            System.out.println("[v0] Cita registrada exitosamente");
+            request.setAttribute("mensaje", "Cita registrada exitosamente");
+            listar(request, response);
+        } else {
+            System.out.println("[v0] Error: resultado = 0");
+            request.setAttribute("error", "Error al registrar cita. Verifica que la API esté funcionando.");
+            nuevo(request, response);
+        }
+    } catch (Exception e) {
+        System.out.println("[v0] EXCEPCIÓN en registrar: " + e.getMessage());
+        e.printStackTrace();
+        request.setAttribute("error", "Error: " + e.getMessage());
+        nuevo(request, response);
+    }
+}
+    
+    protected void editar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            CitasModel citaEditar = dao.BuscarPorId(id);
+            
+            if (citaEditar != null) {
+                PacientesDAO pacientesDao = new PacientesDAO();
+                DoctoresDAO doctoresDao = new DoctoresDAO();
+                
+                List<PacientesModel> pacientes = pacientesDao.Listar();
+                List<DoctoresModel> doctores = doctoresDao.Listar();
+                
+                request.setAttribute("cita", citaEditar);
+                request.setAttribute("pacientes", pacientes);
+                request.setAttribute("doctores", doctores);
+                request.getRequestDispatcher("Citas/citas_editar.jsp").forward(request, response);
             } else {
-                request.setAttribute("error", "Error al registrar cita");
+                request.setAttribute("error", "Cita no encontrada");
+                listar(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
+            request.setAttribute("error", "Error al cargar cita: " + e.getMessage());
+            listar(request, response);
         }
-        
-        listar(request, response);
     }
     
-    // MOSTRAR formulario para editar
-    private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response)
+    protected void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        CitasModel c = citasDAO.buscarPorId(id);
-        
-        request.setAttribute("cita", c);
-        request.setAttribute("pacientes", pacientesDAO.listar());
-        request.setAttribute("doctores", doctoresDAO.listar());
-        request.getRequestDispatcher("citas_editar.jsp").forward(request, response);
-    }
-    
-    // ACTUALIZAR cita
-    private void actualizar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
         try {
             long id = Long.parseLong(request.getParameter("id"));
-            long pacienteId = Long.parseLong(request.getParameter("pacienteId"));
-            long doctorId = Long.parseLong(request.getParameter("doctorId"));
+            int pacienteId = Integer.parseInt(request.getParameter("pacienteId"));
+            int doctorId = Integer.parseInt(request.getParameter("doctorId"));
             LocalDate fechaCita = LocalDate.parse(request.getParameter("fechaCita"));
             LocalTime horaCita = LocalTime.parse(request.getParameter("horaCita"));
             String estado = request.getParameter("estado");
             String motivo = request.getParameter("motivo");
-            String notas = request.getParameter("notas");
             
-            CitasModel c = new CitasModel();
-            c.setId(id);
-            c.setPacienteId(pacienteId);
-            c.setDoctorId(doctorId);
-            c.setFechaCita(fechaCita);
-            c.setHoraCita(horaCita);
-            c.setEstado(estado);
-            c.setMotivo(motivo);
-            c.setNotas(notas);
+            CitasModel citaActualizar = new CitasModel();
+            citaActualizar.setId(id);
+            citaActualizar.setPacienteId(pacienteId);
+            citaActualizar.setDoctorId(doctorId);
+            citaActualizar.setFechaCita(fechaCita);
+            citaActualizar.setHoraCita(horaCita);
+            citaActualizar.setEstado(estado);
+            citaActualizar.setMotivo(motivo);
             
-            if (citasDAO.actualizar(c)) {
+            int resultado = dao.Actualizar(citaActualizar);
+            
+            if (resultado > 0) {
                 request.setAttribute("mensaje", "Cita actualizada exitosamente");
             } else {
-                request.setAttribute("error", "Error al actualizar cita");
+                request.setAttribute("error", "No se pudo actualizar la cita");
             }
+            
+            listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
+            request.setAttribute("error", "Error al actualizar cita: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void eliminar(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            long id = Long.parseLong(request.getParameter("id"));
+            int resultado = dao.Eliminar(id);
+            
+            if (resultado > 0) {
+                request.setAttribute("mensaje", "Cita eliminada exitosamente");
+            } else {
+                request.setAttribute("error", "No se pudo eliminar la cita");
+            }
+            
+            listar(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al eliminar cita: " + e.getMessage());
+            listar(request, response);
+        }
+    }
+    
+    protected void nuevoPaciente(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        String pacienteIdParam = request.getParameter("pacienteId");
+        System.out.println("[v0] Cargando formulario para paciente: " + pacienteIdParam);
+        
+        if (pacienteIdParam == null || pacienteIdParam.isEmpty()) {
+            request.setAttribute("error", "ID de paciente no proporcionado");
+            response.sendRedirect(request.getContextPath() + "/dashboard/dashboard_paciente.jsp");
+            return;
         }
         
-        listar(request, response);
+        long pacienteId = Long.parseLong(pacienteIdParam);
+        
+        // Obtener lista de doctores disponibles
+        DoctoresDAO doctoresDao = new DoctoresDAO();
+        List<DoctoresModel> doctores = doctoresDao.Listar();
+        
+        System.out.println("[v0] Doctores encontrados: " + doctores.size());
+        
+        request.setAttribute("pacienteId", pacienteId);
+        request.setAttribute("doctores", doctores);
+        request.getRequestDispatcher("/Pacientes/paciente_crear_cita.jsp").forward(request, response);
+    } catch (Exception e) {
+        System.out.println("[v0] Error al cargar formulario: " + e.getMessage());
+        e.printStackTrace();
+        request.setAttribute("error", "Error al cargar formulario: " + e.getMessage());
+        response.sendRedirect(request.getContextPath() + "/dashboard/dashboard_paciente.jsp");
     }
-    
-    // CAMBIAR ESTADO de la cita
-    private void cambiarEstado(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        String nuevoEstado = request.getParameter("estado");
-        
-        if (citasDAO.cambiarEstado(id, nuevoEstado)) {
-            request.setAttribute("mensaje", "Estado de cita actualizado");
-        } else {
-            request.setAttribute("error", "Error al cambiar estado");
-        }
-        
-        listar(request, response);
-    }
-    
-    // ELIMINAR cita
-    private void eliminar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        long id = Long.parseLong(request.getParameter("id"));
-        
-        if (citasDAO.eliminar(id)) {
-            request.setAttribute("mensaje", "Cita eliminada exitosamente");
-        } else {
-            request.setAttribute("error", "Error al eliminar cita");
-        }
-        
-        listar(request, response);
-    }
-    
-    // LISTAR citas por paciente
-    private void listarPorPaciente(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        long pacienteId = Long.parseLong(request.getParameter("pacienteId"));
-        request.setAttribute("citas", citasDAO.listarPorPaciente(pacienteId));
-        request.getRequestDispatcher("citas_lista.jsp").forward(request, response);
-    }
-    
-    // LISTAR citas por doctor
-    private void listarPorDoctor(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        long doctorId = Long.parseLong(request.getParameter("doctorId"));
-        request.setAttribute("citas", citasDAO.listarPorDoctor(doctorId));
-        request.getRequestDispatcher("citas_lista.jsp").forward(request, response);
-    }
-    
-    // LISTAR citas por fecha
-    private void listarPorFecha(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        java.sql.Date fecha = java.sql.Date.valueOf(request.getParameter("fecha"));
-        request.setAttribute("citas", citasDAO.listarPorFecha(fecha));
-        request.getRequestDispatcher("citas_lista.jsp").forward(request, response);
-    }
+}
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

@@ -39,6 +39,7 @@ public class Validar extends HttpServlet {
 
                 // Redirigir según el rol
                 String rol = u.getRol();
+
                 String dashboardPage = "";
 
                 switch (rol.toLowerCase()) {
