@@ -5,16 +5,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Recepcionista - Sistema Médico</title>
+    <title>Dashboard Paciente - Sistema Médico</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         :root {
             --primary-color: #2563eb;
-            --secondary-color: #10b981;
-            --accent-color: #8b5cf6;
-            --danger-color: #ef4444;
-            --light-bg: #f8fafc;
+            --primary-dark: #1e40af;
+            --secondary-color: #0ea5e9;
+            --light-bg: #f0f9ff;
         }
 
         body {
@@ -23,7 +22,7 @@
         }
 
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
@@ -45,68 +44,19 @@
         }
 
         .sidebar .nav-link:hover {
-            background-color: #f1f5f9;
-            color: var(--primary-color);
-            border-left-color: var(--primary-color);
-        }
-
-        .sidebar .nav-link.active {
             background-color: #eff6ff;
             color: var(--primary-color);
             border-left-color: var(--primary-color);
         }
 
-        .action-card {
-            border: none;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            overflow: hidden;
-            height: 100%;
-        }
-
-        .action-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-        }
-
-        .action-card .card-body {
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .action-card i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .action-card.primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-
-        .action-card.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .action-card.purple {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-        }
-
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 3px solid var(--primary-color);
-            display: inline-block;
+        .sidebar .nav-link.active {
+            background-color: #dbeafe;
+            color: var(--primary-color);
+            border-left-color: var(--primary-color);
         }
 
         .welcome-card {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
             border-radius: 12px;
             padding: 2rem;
@@ -114,74 +64,59 @@
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
         }
 
-        .welcome-card h2 {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .welcome-card p {
-            opacity: 0.9;
-            margin-bottom: 0;
-        }
-
-        .stats-card {
+        .info-card {
             background: white;
             border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .cita-card {
+            background: white;
+            border-radius: 10px;
             padding: 1.5rem;
+            margin-bottom: 1rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border-left: 4px solid;
             transition: all 0.3s ease;
         }
 
-        .stats-card:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        .cita-card.programada {
+            border-left-color: #3b82f6;
+        }
+
+        .cita-card.completada {
+            border-left-color: #10b981;
+        }
+
+        .cita-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             transform: translateX(5px);
         }
 
-        .stats-card.blue { border-left-color: #3b82f6; }
-        .stats-card.green { border-left-color: #10b981; }
-        .stats-card.purple { border-left-color: #8b5cf6; }
-
-        .stats-card .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--primary-color);
         }
 
-        .stats-card.blue .icon {
-            background-color: #dbeafe;
-            color: #3b82f6;
+        .badge-programada {
+            background-color: #3b82f6;
         }
 
-        .stats-card.green .icon {
-            background-color: #d1fae5;
-            color: #10b981;
+        .badge-completada {
+            background-color: #10b981;
         }
 
-        .stats-card.purple .icon {
-            background-color: #ede9fe;
-            color: #8b5cf6;
-        }
-
-        .btn-custom {
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        .badge-cancelada {
+            background-color: #ef4444;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
@@ -207,196 +142,151 @@
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
             <div class="col-md-2 sidebar">
                 <nav class="nav flex-column">
-                    <a class="nav-link active" href="dashboard_recepcionista.jsp">
+                    <a class="nav-link active" href="dashboard_paciente.jsp">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/UsuariosController?accion=listar">
-                        <i class="bi bi-person-plus"></i> Crear Usuarios
+                    <a class="nav-link" href="${pageContext.request.contextPath}/PacientesController?accion=misCitas">
+                        <i class="bi bi-calendar-check"></i> Mis Citas
                     </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/PacientesController?accion=listar">
-                        <i class="bi bi-people"></i> Ver Pacientes
-                    </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/DoctoresController?accion=listar">
-                        <i class="bi bi-person-badge"></i> Ver Doctores
-                    </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/CitasController?accion=listar">
-                        <i class="bi bi-calendar-check"></i> Todas las Citas
+                    <a class="nav-link" href="${pageContext.request.contextPath}/PacientesController?accion=misConsultas">
+                        <i class="bi bi-file-medical"></i> Mis Consultas
                     </a>
                 </nav>
             </div>
 
-            <!-- Main Content -->
             <div class="col-md-10 p-4">
-                <!-- Welcome Section -->
                 <div class="welcome-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2>Bienvenido, ${usuario.nombre}</h2>
-                            <p>Panel de Recepción - Sistema de Gestión Médica</p>
+                            <h2>Bienvenido, ${usuario.nombre} ${usuario.apellido}</h2>
+                            <p>Panel de Paciente - Sistema de Gestión Médica</p>
                         </div>
                         <div>
                             <span class="badge bg-white text-primary fs-6 px-3 py-2">
-                                <i class="bi bi-calendar3"></i> 
-                                <%= new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()) %>
+                                <i class="bi bi-credit-card"></i> ${paciente.codigoPaciente}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="stats-card blue">
-                            <div class="d-flex align-items-center">
-                                <div class="icon me-3">
-                                    <i class="bi bi-people-fill"></i>
-                                </div>
-                                <div>
-                                    <h6 class="text-muted mb-1">Total Pacientes</h6>
-                                    <h3 class="mb-0 fw-bold" id="totalPacientes">-</h3>
-                                </div>
-                            </div>
+                <div class="info-card">
+                    <h4 class="section-title">
+                        <i class="bi bi-person-badge"></i> Mi Información
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Nombre:</strong> ${paciente.usuarioNombre} ${paciente.usuarioApellido}</p>
+                            <p><strong>Código:</strong> ${paciente.codigoPaciente}</p>
+                            <p><strong>Correo:</strong> ${paciente.usuarioCorreo}</p>
                         </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="stats-card green">
-                            <div class="d-flex align-items-center">
-                                <div class="icon me-3">
-                                    <i class="bi bi-person-badge-fill"></i>
-                                </div>
-                                <div>
-                                    <h6 class="text-muted mb-1">Doctores Activos</h6>
-                                    <h3 class="mb-0 fw-bold" id="totalDoctores">-</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="stats-card purple">
-                            <div class="d-flex align-items-center">
-                                <div class="icon me-3">
-                                    <i class="bi bi-calendar-check-fill"></i>
-                                </div>
-                                <div>
-                                    <h6 class="text-muted mb-1">Citas Hoy</h6>
-                                    <h3 class="mb-0 fw-bold" id="citasHoy">-</h3>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <p><strong>Teléfono:</strong> ${paciente.usuarioTelefono}</p>
+                            <p><strong>Fecha de Nacimiento:</strong> ${paciente.fechaNacimiento}</p>
+                            <p><strong>Género:</strong> ${paciente.genero}</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Actions -->
-                <h3 class="section-title">Acciones Principales</h3>
-                <div class="row mb-5">
-                    <div class="col-md-4 mb-3">
-                        <div class="card action-card primary" onclick="location.href='${pageContext.request.contextPath}/UsuariosController?accion=nuevo'">
-                            <div class="card-body">
-                                <i class="bi bi-person-plus-fill"></i>
-                                <h4 class="fw-bold">Crear Usuario</h4>
-                                <p class="mb-0">Registrar nuevo usuario en el sistema</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card action-card success" onclick="location.href='${pageContext.request.contextPath}/PacientesController?accion=listar'">
-                            <div class="card-body">
-                                <i class="bi bi-people-fill"></i>
-                                <h4 class="fw-bold">Ver Pacientes</h4>
-                                <p class="mb-0">Gestionar pacientes y programar citas</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card action-card purple" onclick="location.href='${pageContext.request.contextPath}/DoctoresController?accion=listar'">
-                            <div class="card-body">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <h4 class="fw-bold">Ver Doctores</h4>
-                                <p class="mb-0">Consultar información de doctores</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <h3 class="section-title">
+                    <i class="bi bi-calendar-check"></i> Próximas Citas
+                </h3>
 
-                <!-- Quick Access -->
-                <h3 class="section-title">Acceso Rápido</h3>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title mb-3">
-                                    <i class="bi bi-calendar-plus text-primary"></i> Programar Cita
-                                </h5>
-                                <p class="text-muted">Agenda una nueva cita médica para un paciente</p>
-                                <button class="btn btn-primary btn-custom" onclick="location.href='${pageContext.request.contextPath}/CitasController?accion=nuevo'">
-                                    <i class="bi bi-plus-circle"></i> Nueva Cita
-                                </button>
+                <c:forEach var="cita" items="${proximasCitas}">
+                    <div class="cita-card programada">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5><i class="bi bi-person-badge"></i> Dr. ${cita.doctorNombre} ${cita.doctorApellido}</h5>
+                                <p class="text-muted mb-2">${cita.doctorEspecializacion}</p>
+                                <p class="mb-1"><i class="bi bi-calendar3"></i> <strong>Fecha:</strong> ${cita.fechaCita}</p>
+                                <p class="mb-1"><i class="bi bi-clock"></i> <strong>Hora:</strong> ${cita.horaCita}</p>
+                                <p class="mb-1"><i class="bi bi-chat-left-text"></i> <strong>Motivo:</strong> ${cita.motivo}</p>
+                                <span class="badge badge-${cita.estado}">${cita.estado}</span>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <c:if test="${cita.estado == 'programada'}">
+                                    <button class="btn btn-danger" onclick="cancelarCita(${cita.id})">
+                                        <i class="bi bi-x-circle"></i> Cancelar Cita
+                                    </button>
+                                </c:if>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
-                                <h5 class="card-title mb-3">
-                                    <i class="bi bi-calendar-week text-success"></i> Ver Todas las Citas
-                                </h5>
-                                <p class="text-muted">Consulta el calendario completo de citas</p>
-                                <button class="btn btn-success btn-custom" onclick="location.href='${pageContext.request.contextPath}/CitasController?accion=listar'">
-                                    <i class="bi bi-calendar3"></i> Ver Calendario
-                                </button>
+                </c:forEach>
+
+                <c:if test="${empty proximasCitas}">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No tienes citas programadas
+                    </div>
+                </c:if>
+
+                <h3 class="section-title mt-4">
+                    <i class="bi bi-file-medical"></i> Consultas Recientes
+                </h3>
+
+                <c:forEach var="consulta" items="${consultasRecientes}">
+                    <div class="cita-card completada">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5><i class="bi bi-person-badge"></i> Dr. ${consulta.doctorNombre} ${consulta.doctorApellido}</h5>
+                                <p class="mb-1"><i class="bi bi-calendar3"></i> <strong>Fecha:</strong> ${consulta.fechaCita}</p>
+                                <p class="mb-1"><i class="bi bi-clipboard-pulse"></i> <strong>Diagnóstico:</strong> ${consulta.diagnostico}</p>
+                                <p class="mb-1"><i class="bi bi-prescription2"></i> <strong>Tratamiento:</strong> ${consulta.planTratamiento}</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="${pageContext.request.contextPath}/ConsultasController?accion=ver&citaId=${consulta.citaId}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i> Ver Detalle
+                                </a>
                             </div>
                         </div>
                     </div>
+                </c:forEach>
+
+                <c:if test="${empty consultasRecientes}">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No tienes consultas registradas
+                    </div>
+                </c:if>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cancelar Cita -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Cancelar Cita</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+                <form action="${pageContext.request.contextPath}/CitasController" method="post">
+                    <input type="hidden" name="accion" value="cancelar">
+                    <input type="hidden" name="citaId" id="cancelCitaId">
+                    <input type="hidden" name="returnUrl" value="dashboard_paciente">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Motivo de Cancelación *</label>
+                            <textarea class="form-control" name="motivoCancelacion" rows="3" required placeholder="Ingrese el motivo de la cancelación"></textarea>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Esta acción no se puede deshacer
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Cargar estadísticas desde la API
-        document.addEventListener('DOMContentLoaded', function() {
-            cargarEstadisticas();
-        });
-
-        function cargarEstadisticas() {
-            // Cargar total de pacientes
-            fetch('${pageContext.request.contextPath}/api/pacientes')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalPacientes').textContent = data.length || 0;
-                })
-                .catch(error => {
-                    console.log('[v0] Error cargando pacientes:', error);
-                    document.getElementById('totalPacientes').textContent = '0';
-                });
-
-            // Cargar total de doctores
-            fetch('${pageContext.request.contextPath}/api/doctores')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalDoctores').textContent = data.length || 0;
-                })
-                .catch(error => {
-                    console.log('[v0] Error cargando doctores:', error);
-                    document.getElementById('totalDoctores').textContent = '0';
-                });
-
-            // Cargar citas de hoy
-            fetch('${pageContext.request.contextPath}/api/citas')
-                .then(response => response.json())
-                .then(data => {
-                    const hoy = new Date().toISOString().split('T')[0];
-                    const citasHoy = data.filter(cita => cita.fecha_cita && cita.fecha_cita.startsWith(hoy));
-                    document.getElementById('citasHoy').textContent = citasHoy.length || 0;
-                })
-                .catch(error => {
-                    console.log('[v0] Error cargando citas:', error);
-                    document.getElementById('citasHoy').textContent = '0';
-                });
+        function cancelarCita(citaId) {
+            document.getElementById('cancelCitaId').value = citaId;
+            new bootstrap.Modal(document.getElementById('cancelModal')).show();
         }
     </script>
 </body>

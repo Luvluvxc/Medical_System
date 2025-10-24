@@ -80,9 +80,7 @@
                                     <label class="form-label">Rol <span class="text-danger">*</span></label>
                                     <select class="form-select" name="rol" required>
                                         <option value="">Seleccione un rol...</option>
-                                        <option value="admin">Administrador</option>
                                         <option value="doctor">Doctor</option>
-                                        <option value="recepcionista">Recepcionista</option>
                                         <option value="paciente">Paciente</option>
                                     </select>
                                 </div>

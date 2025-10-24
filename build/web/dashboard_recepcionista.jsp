@@ -11,10 +11,11 @@
     <style>
         :root {
             --primary-color: #2563eb;
-            --secondary-color: #10b981;
-            --accent-color: #8b5cf6;
-            --danger-color: #ef4444;
-            --light-bg: #f8fafc;
+            --primary-dark: #1e40af;
+            --primary-light: #3b82f6;
+            --secondary-color: #0ea5e9;
+            --accent-color: #06b6d4;
+            --light-bg: #f0f9ff;
         }
 
         body {
@@ -23,7 +24,7 @@
         }
 
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
@@ -45,13 +46,13 @@
         }
 
         .sidebar .nav-link:hover {
-            background-color: #f1f5f9;
+            background-color: #eff6ff;
             color: var(--primary-color);
             border-left-color: var(--primary-color);
         }
 
         .sidebar .nav-link.active {
-            background-color: #eff6ff;
+            background-color: #dbeafe;
             color: var(--primary-color);
             border-left-color: var(--primary-color);
         }
@@ -85,13 +86,18 @@
             color: white;
         }
 
-        .action-card.success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        .action-card.secondary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
             color: white;
         }
 
-        .action-card.purple {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        .action-card.accent {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .action-card.info {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
         }
 
@@ -106,7 +112,7 @@
         }
 
         .welcome-card {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             color: white;
             border-radius: 12px;
             padding: 2rem;
@@ -124,47 +130,23 @@
             margin-bottom: 0;
         }
 
-        .stats-card {
+        .search-card {
             background: white;
             border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid;
-            transition: all 0.3s ease;
+            margin-bottom: 2rem;
         }
 
-        .stats-card:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
-            transform: translateX(5px);
+        .search-card .form-control {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem 1rem;
         }
 
-        .stats-card.blue { border-left-color: #3b82f6; }
-        .stats-card.green { border-left-color: #10b981; }
-        .stats-card.purple { border-left-color: #8b5cf6; }
-
-        .stats-card .icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .stats-card.blue .icon {
-            background-color: #dbeafe;
-            color: #3b82f6;
-        }
-
-        .stats-card.green .icon {
-            background-color: #d1fae5;
-            color: #10b981;
-        }
-
-        .stats-card.purple .icon {
-            background-color: #ede9fe;
-            color: #8b5cf6;
+        .search-card .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
         }
 
         .btn-custom {
@@ -181,7 +163,6 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="#">
@@ -207,30 +188,24 @@
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
             <div class="col-md-2 sidebar">
                 <nav class="nav flex-column">
                     <a class="nav-link active" href="dashboard_recepcionista.jsp">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                     <a class="nav-link" href="${pageContext.request.contextPath}/UsuariosController?accion=listar">
-                        <i class="bi bi-person-plus"></i> Crear Usuarios
-                    </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/PacientesController?accion=listar">
-                        <i class="bi bi-people"></i> Ver Pacientes
-                    </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/DoctoresController?accion=listar">
-                        <i class="bi bi-person-badge"></i> Ver Doctores
+                        <i class="bi bi-people"></i> Usuarios
                     </a>
                     <a class="nav-link" href="${pageContext.request.contextPath}/CitasController?accion=listar">
-                        <i class="bi bi-calendar-check"></i> Todas las Citas
+                        <i class="bi bi-calendar-check"></i> Citas
+                    </a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/ConsultasController?accion=listarCerradas">
+                        <i class="bi bi-file-medical"></i> Consultas Cerradas
                     </a>
                 </nav>
             </div>
 
-            <!-- Main Content -->
             <div class="col-md-10 p-4">
-                <!-- Welcome Section -->
                 <div class="welcome-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -245,45 +220,58 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Added search by patient code -->
+                <div class="search-card">
+                    <h5 class="mb-3"><i class="bi bi-search"></i> Buscar por Código de Paciente</h5>
+                    <form action="${pageContext.request.contextPath}/PacientesController" method="get" class="row g-3">
+                        <input type="hidden" name="accion" value="buscarPorCodigo">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" name="codigo" placeholder="Ingrese el código del paciente" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary btn-custom w-100">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
                 
-                <!-- Main Actions -->
                 <h3 class="section-title">Acciones Principales</h3>
                 <div class="row mb-5">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <div class="card action-card primary" onclick="location.href='${pageContext.request.contextPath}/UsuariosController?accion=listar'">
                             <div class="card-body">
-                                <i class="bi bi-person-plus-fill"></i>
-                                <h4 class="fw-bold">Usuarios</h4>
-                                <p class="mb-0">Registrar nuevo usuario en el sistema</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card action-card success" onclick="location.href='${pageContext.request.contextPath}/PacientesController?accion=listar'">
-                            <div class="card-body">
                                 <i class="bi bi-people-fill"></i>
-                                <h4 class="fw-bold">Ver Pacientes</h4>
-                                <p class="mb-0">Gestionar pacientes y programar citas</p>
+                                <h4 class="fw-bold">Usuarios</h4>
+                                <p class="mb-0">Gestionar usuarios del sistema</p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card action-card purple" onclick="location.href='${pageContext.request.contextPath}/DoctoresController?accion=listar'">
+                    <div class="col-md-3 mb-3">
+                        <div class="card action-card secondary" onclick="location.href='${pageContext.request.contextPath}/CitasController?accion=listar'">
                             <div class="card-body">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <h4 class="fw-bold">Ver Doctores</h4>
-                                <p class="mb-0">Consultar información de doctores</p>
+                                <i class="bi bi-calendar-check-fill"></i>
+                                <h4 class="fw-bold">Citas</h4>
+                                <p class="mb-0">Ver y gestionar citas médicas</p>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card action-card accent" onclick="location.href='${pageContext.request.contextPath}/ConsultasController?accion=listarCerradas'">
+                            <div class="card-body">
+                                <i class="bi bi-file-medical-fill"></i>
+                                <h4 class="fw-bold">Consultas</h4>
+                                <p class="mb-0">Ver consultas cerradas</p>
+                            </div>
+                        </div>
+                    </div>
+                    
                 </div>
-
-                
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
 </body>
 </html>

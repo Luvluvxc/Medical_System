@@ -54,6 +54,7 @@
             font-weight: bold;
             color: white;
         }
+        
         .badge-sin-registro {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             animation: pulse 2s infinite;
@@ -143,9 +144,7 @@
                         <button class="btn btn-info filter-btn" onclick="filtrarPorRol('doctor')">
                             <i class="bi bi-person-badge"></i> Doctores
                         </button>
-                        <button class="btn btn-warning filter-btn" onclick="filtrarPorRol('recepcionista')">
-                            <i class="bi bi-person-workspace"></i> Recepcionistas
-                        </button>
+                        
                     </div>
                 </div>
 
@@ -163,7 +162,7 @@
                         <tbody>
                             <c:forEach var="usuario" items="${usuarios}">
                                 <!-- Filter out admin users -->
-                                <c:if test="${usuario.rol != 'admin'}">
+                                <c:if test="${usuario.rol != 'admin' && usuario.rol != 'recepcionista'}">
                                     <tr data-rol="${usuario.rol}" data-usuario-id="${usuario.id}">
                                         <td>
                                             <div class="d-flex align-items-center">
@@ -172,7 +171,6 @@
                                                      <c:choose>
                                                          <c:when test='${usuario.rol == "paciente"}'>#11998e, #38ef7d</c:when>
                                                          <c:when test='${usuario.rol == "doctor"}'>#4facfe, #00f2fe</c:when>
-                                                         <c:when test='${usuario.rol == "recepcionista"}'>#fa709a, #fee140</c:when>
                                                          <c:otherwise>#667eea, #764ba2</c:otherwise>
                                                      </c:choose>);">
                                                     ${usuario.nombre.substring(0,1)}${usuario.apellido.substring(0,1)}
@@ -212,11 +210,7 @@
                                                         <i class="bi bi-exclamation-circle"></i> Sin Registro
                                                     </span>
                                                 </c:when>
-                                                <c:when test="${usuario.rol == 'recepcionista'}">
-                                                    <span class="badge bg-warning">
-                                                        <i class="bi bi-person-workspace"></i> Recepcionista
-                                                    </span>
-                                                </c:when>
+                                                
                                                 <c:otherwise>
                                                     <span class="badge bg-secondary">${usuario.rol}</span>
                                                 </c:otherwise>

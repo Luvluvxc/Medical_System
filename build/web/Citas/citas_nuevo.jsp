@@ -1,180 +1,203 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Citas - Sistema Médico</title>
+    <title>Nueva Cita - Sistema Médico</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --light-bg: #f0f9ff;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .card {
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: none;
         }
-        .table-actions {
-            white-space: nowrap;
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
         }
-        .btn-action {
-            margin: 2px;
+
+        .form-label {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            padding: 0.75rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .btn-custom {
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .time-slot {
+            padding: 0.5rem;
+            margin: 0.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .time-slot:hover {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .time-slot.occupied {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .time-slot.selected {
+            background-color: #dbeafe;
+            border-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        #timeSlotsContainer {
+            display: none;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-info">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}dashboard_recepcionista.jsp">
-                <i class="bi bi-hospital"></i> Sistema Médico
+            <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/dashboard_recepcionista.jsp">
+                <i class="bi bi-hospital-fill"></i> Sistema Médico
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="${pageContext.request.contextPath}dashboard_recepcionista.jsp">
-                    <i class="bi bi-house-door"></i> Dashboard
-                </a>
-            </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}dashboard_recepcionista.jsp">Inicio</a></li>
-                <li class="breadcrumb-item active">Citas</li>
-            </ol>
-        </nav>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="form-card">
+                    <h2 class="section-title">
+                        <i class="bi bi-calendar-plus"></i> Registrar Nueva Cita
+                    </h2>
 
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0"><i class="bi bi-calendar-check-fill"></i> Gestión de Citas Médicas</h4>
-                    <a href="${pageContext.request.contextPath}/CitasController?accion=nuevo" class="btn btn-light">
-                        <i class="bi bi-calendar-plus"></i> Nueva Cita
-                    </a>
-                </div>
-            </div>
-            <div class="card-body">
-                <c:if test="${not empty mensaje}">
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle-fill"></i> ${mensaje}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                </c:if>
-                
-                <c:if test="${not empty error}">
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="bi bi-exclamation-triangle-fill"></i> ${error}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                </c:if>
+                    <form action="${pageContext.request.contextPath}/CitasController" method="post" id="citaForm">
+                        <input type="hidden" name="accion" value="registrar">
+                        <input type="hidden" name="pacienteId" value="${paciente.id}">
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Paciente</th>
-                                <th>Doctor</th>
-                                <th>Motivo</th>
-                                <th>Estado</th>
-                                <th class="text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="cita" items="${citas}">
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-info">#${cita.id}</span>
-                                    </td>
-                                    <td>
-                                        <i class="bi bi-calendar3"></i> ${cita.fechaCita}
-                                    </td>
-                                    <td>
-                                        <i class="bi bi-clock"></i> ${cita.horaCita}
-                                    </td>
-                                    <td>
-                                        <strong>${cita.pacienteNombre}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-primary">
-                                            Dr. ${cita.doctorNombre}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <small>${cita.motivo}</small>
-                                    </td>
-                                    <td>
-                                        <c:choose>
-                                            <c:when test="${cita.estado == 'Pendiente'}">
-                                                <span class="badge bg-warning text-dark">
-                                                    <i class="bi bi-clock-history"></i> Pendiente
-                                                </span>
-                                            </c:when>
-                                            <c:when test="${cita.estado == 'Confirmada'}">
-                                                <span class="badge bg-success">
-                                                    <i class="bi bi-check-circle"></i> Confirmada
-                                                </span>
-                                            </c:when>
-                                            <c:when test="${cita.estado == 'Completada'}">
-                                                <span class="badge bg-info">
-                                                    <i class="bi bi-check-all"></i> Completada
-                                                </span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge bg-danger">
-                                                    <i class="bi bi-x-circle"></i> Cancelada
-                                                </span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="text-center table-actions">
-                                        <a href="${pageContext.request.contextPath}/CitasController?accion=editar&id=${cita.id}" 
-                                           class="btn btn-sm btn-warning btn-action" 
-                                           title="Editar cita">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        
-                                        <button type="button" 
-                                                class="btn btn-sm btn-danger btn-action" 
-                                                onclick="confirmarEliminar(${cita.id}, '${cita.pacienteNombre}', '${cita.fechaCita}')"
-                                                title="Eliminar cita">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-person"></i> Paciente
+                                </label>
+                                <input type="text" class="form-control" value="${paciente.usuarioNombre} ${paciente.usuarioApellido}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-credit-card"></i> Código Paciente
+                                </label>
+                                <input type="text" class="form-control" value="${paciente.codigoPaciente}" readonly>
+                            </div>
+                        </div>
 
-    <!-- Modal de confirmación -->
-    <div class="modal fade" id="modalEliminar" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Está seguro que desea eliminar la cita de <strong id="nombrePaciente"></strong> para el día <strong id="fechaCita"></strong>?</p>
-                    <p class="text-danger">
-                        <i class="bi bi-info-circle"></i> Esta acción no se puede deshacer.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <a href="#" id="btnConfirmarEliminar" class="btn btn-danger">
-                        <i class="bi bi-trash-fill"></i> Eliminar
-                    </a>
+                        <div class="mb-3">
+                            <label for="doctorId" class="form-label">
+                                <i class="bi bi-person-badge"></i> Doctor *
+                            </label>
+                            <select class="form-select" id="doctorId" name="doctorId" required>
+                                <option value="">Seleccione un doctor</option>
+                                <c:forEach var="doctor" items="${doctores}">
+                                    <option value="${doctor.id}">
+                                        Dr. ${doctor.usuarioNombre} ${doctor.usuarioApellido} - ${doctor.especializacion}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="fechaCita" class="form-label">
+                                    <i class="bi bi-calendar"></i> Fecha de la Cita *
+                                </label>
+                                <input type="date" class="form-control" id="fechaCita" name="fechaCita" required min="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) %>">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="horaCita" class="form-label">
+                                    <i class="bi bi-clock"></i> Hora de la Cita *
+                                </label>
+                                <input type="time" class="form-control" id="horaCita" name="horaCita" required>
+                            </div>
+                        </div>
+
+                        <!-- Added time slots visualization -->
+                        <div id="timeSlotsContainer" class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-week"></i> Horarios Disponibles
+                            </label>
+                            <div id="timeSlots" class="row"></div>
+                            <small class="text-muted">Haga clic en un horario disponible o ingrese uno manualmente</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">
+                                <i class="bi bi-chat-left-text"></i> Motivo de la Consulta *
+                            </label>
+                            <textarea class="form-control" id="motivo" name="motivo" rows="3" required placeholder="Describa el motivo de la consulta"></textarea>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Todos los campos marcados con * son obligatorios
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="${pageContext.request.contextPath}/UsuariosController?accion=listar" class="btn btn-secondary btn-custom">
+                                <i class="bi bi-arrow-left"></i> Regresar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom">
+                                <i class="bi bi-check-circle"></i> Registrar Cita
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -182,13 +205,92 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmarEliminar(id, paciente, fecha) {
-            document.getElementById('nombrePaciente').textContent = paciente;
-            document.getElementById('fechaCita').textContent = fecha;
-            document.getElementById('btnConfirmarEliminar').href = 
-                '${pageContext.request.contextPath}/CitasController?accion=eliminar&id=' + id;
-            new bootstrap.Modal(document.getElementById('modalEliminar')).show();
+        const form = document.getElementById('citaForm');
+        const doctorSelect = document.getElementById('doctorId');
+        const fechaInput = document.getElementById('fechaCita');
+        const horaInput = document.getElementById('horaCita');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const timeSlotsDiv = document.getElementById('timeSlots');
+
+        // Generate time slots from 8:00 to 18:00
+        function generateTimeSlots() {
+            const slots = [];
+            for (let hour = 8; hour < 18; hour++) {
+                slots.push(`${hour.toString().padStart(2, '0')}:00`);
+                slots.push(`${hour.toString().padStart(2, '0')}:30`);
+            }
+            return slots;
         }
+
+        // Load occupied time slots
+        async function loadOccupiedSlots() {
+            const doctorId = doctorSelect.value;
+            const fecha = fechaInput.value;
+
+            if (!doctorId || !fecha) {
+                timeSlotsContainer.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${pageContext.request.contextPath}/CitasController?accion=verificarDisponibilidad&doctorId=${doctorId}&fecha=${fecha}`);
+                const occupiedSlots = await response.json();
+
+                displayTimeSlots(occupiedSlots);
+                timeSlotsContainer.style.display = 'block';
+            } catch (error) {
+                console.error('[v0] Error loading time slots:', error);
+            }
+        }
+
+        function displayTimeSlots(occupiedSlots) {
+            const allSlots = generateTimeSlots();
+            timeSlotsDiv.innerHTML = '';
+
+            allSlots.forEach(slot => {
+                const isOccupied = occupiedSlots.includes(slot);
+                const slotDiv = document.createElement('div');
+                slotDiv.className = `col-2 time-slot ${isOccupied ? 'occupied' : ''}`;
+                slotDiv.textContent = slot;
+
+                if (!isOccupied) {
+                    slotDiv.onclick = () => {
+                        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                        slotDiv.classList.add('selected');
+                        horaInput.value = slot;
+                    };
+                }
+
+                timeSlotsDiv.appendChild(slotDiv);
+            });
+        }
+
+        doctorSelect.addEventListener('change', loadOccupiedSlots);
+        fechaInput.addEventListener('change', loadOccupiedSlots);
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const doctorId = doctorSelect.value;
+            const fecha = fechaInput.value;
+            const hora = horaInput.value;
+
+            // Validate time slot availability
+            try {
+                const response = await fetch(`${pageContext.request.contextPath}/CitasController?accion=verificarDisponibilidad&doctorId=${doctorId}&fecha=${fecha}`);
+                const occupiedSlots = await response.json();
+
+                if (occupiedSlots.includes(hora)) {
+                    alert('Lo siento, ese horario ya está ocupado. Por favor seleccione otro horario.');
+                    return;
+                }
+
+                form.submit();
+            } catch (error) {
+                console.error('[v0] Error validating appointment:', error);
+                form.submit();
+            }
+        });
     </script>
 </body>
 </html>

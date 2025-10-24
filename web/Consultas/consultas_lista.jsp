@@ -5,172 +5,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctores - Sistema Médico</title>
+    <title>Consultas Cerradas - Sistema Médico</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
-        .doctor-card {
-            transition: transform 0.2s, box-shadow 0.2s;
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1e40af;
+            --light-bg: #f0f9ff;
         }
-        .doctor-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .doctor-avatar {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            color: white;
-            font-weight: bold;
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .badge-especialidad {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.8rem;
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .filter-card {
+            background: #eff6ff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .consulta-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            border-left: 5px solid #10b981;
+        }
+
+        .consulta-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
         }
     </style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="../dashboard">
-                <i class="bi bi-hospital"></i> Sistema Médico
+            <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/dashboard_recepcionista.jsp">
+                <i class="bi bi-hospital-fill"></i> Sistema Médico
             </a>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2><i class="bi bi-person-badge-fill"></i> Gestión de Doctores</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="../dashboard">Inicio</a></li>
-                        <li class="breadcrumb-item active">Doctores</li>
-                    </ol>
-                </nav>
-            </div>
-            <a href="DoctoresController?accion=nuevo" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Nuevo Doctor
-            </a>
-        </div>
+    <div class="container-fluid p-4">
+        <div class="content-card">
+            <h2 class="section-title">
+                <i class="bi bi-file-medical"></i> Consultas Cerradas
+            </h2>
 
-        <c:if test="${not empty mensaje}">
-            <div class="alert alert-success alert-dismissible fade show">
-                <i class="bi bi-check-circle"></i> ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="filter-card">
+                <form action="${pageContext.request.contextPath}/ConsultasController" method="get" class="row g-3">
+                    <input type="hidden" name="accion" value="listarCerradas">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-search"></i> Buscar por Código de Paciente
+                        </label>
+                        <input type="text" class="form-control" name="codigoPaciente" 
+                               value="${param.codigoPaciente}" 
+                               placeholder="Ingrese el código del paciente">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <a href="${pageContext.request.contextPath}/ConsultasController?accion=listarCerradas" 
+                           class="btn btn-secondary w-100">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                    </div>
+                </form>
             </div>
-        </c:if>
 
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar doctor por nombre o especialidad...">
+            <c:if test="${not empty param.codigoPaciente}">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Mostrando resultados para el código: <strong>${param.codigoPaciente}</strong>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <select class="form-select" id="filterEspecialidad">
-                    <option value="">Todas las especialidades</option>
-                    <option value="Cardiología">Cardiología</option>
-                    <option value="Pediatría">Pediatría</option>
-                    <option value="Dermatología">Dermatología</option>
-                    <option value="Neurología">Neurología</option>
-                    <option value="Traumatología">Traumatología</option>
-                </select>
-            </div>
-        </div>
+            </c:if>
 
-        <div class="row g-4" id="doctoresContainer">
-            <c:forEach var="doctor" items="${doctores}">
-                <div class="col-md-6 col-lg-4 doctor-item" data-especialidad="${doctor.especialidad}">
-                    <div class="card doctor-card h-100 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-start mb-3">
-                                <div class="doctor-avatar me-3">
-                                    ${doctor.nombre.substring(0,1)}${doctor.apellido.substring(0,1)}
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title mb-1">Dr. ${doctor.nombre} ${doctor.apellido}</h5>
-                                    <span class="badge badge-especialidad bg-primary">${doctor.especialidad}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <small class="text-muted"><i class="bi bi-card-text"></i> Licencia:</small>
-                                <p class="mb-1">${doctor.licencia}</p>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <small class="text-muted"><i class="bi bi-telephone"></i> Teléfono:</small>
-                                <p class="mb-1">${doctor.telefono}</p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <small class="text-muted"><i class="bi bi-envelope"></i> Correo:</small>
-                                <p class="mb-1 text-truncate">${doctor.correo}</p>
-                            </div>
-
-                            <c:if test="${not empty doctor.idUsuario}">
-                                <div class="alert alert-info py-2 mb-3">
-                                    <small><i class="bi bi-person-check"></i> Usuario del sistema vinculado</small>
-                                </div>
+            <c:forEach var="consulta" items="${consultas}">
+                <div class="consulta-card">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5><i class="bi bi-person"></i> ${consulta.pacienteNombre} ${consulta.pacienteApellido}</h5>
+                            <p class="text-muted mb-2">Código: ${consulta.codigoPaciente}</p>
+                            <p class="mb-1"><i class="bi bi-person-badge"></i> <strong>Doctor:</strong> Dr. ${consulta.doctorNombre} ${consulta.doctorApellido} - ${consulta.especializacion}</p>
+                            <p class="mb-1"><i class="bi bi-calendar3"></i> <strong>Fecha:</strong> ${consulta.fechaCita} - ${consulta.horaCita}</p>
+                            <p class="mb-1"><i class="bi bi-clipboard-pulse"></i> <strong>Diagnóstico:</strong> ${consulta.diagnostico}</p>
+                            <p class="mb-1"><i class="bi bi-prescription2"></i> <strong>Tratamiento:</strong> ${consulta.planTratamiento}</p>
+                            <c:if test="${not empty consulta.observaciones}">
+                                <p class="mb-1"><i class="bi bi-chat-left-text"></i> <strong>Observaciones:</strong> ${consulta.observaciones}</p>
                             </c:if>
-                            
-                            <div class="d-flex gap-2">
-                                <a href="DoctoresController?accion=editar&id=${doctor.id}" class="btn btn-sm btn-outline-primary flex-grow-1">
-                                    <i class="bi bi-pencil"></i> Editar
-                                </a>
-                                <button onclick="confirmarEliminar(${doctor.id})" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="${pageContext.request.contextPath}/ConsultasController?accion=ver&citaId=${consulta.citaId}" 
+                               class="btn btn-info mb-2 w-100">
+                                <i class="bi bi-eye"></i> Ver Detalle
+                            </a>
+                            <button onclick="imprimirReporte(${consulta.id})" class="btn btn-primary w-100">
+                                <i class="bi bi-printer"></i> Imprimir Reporte
+                            </button>
                         </div>
                     </div>
                 </div>
             </c:forEach>
-        </div>
 
-        <c:if test="${empty doctores}">
-            <div class="text-center py-5">
-                <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-                <p class="text-muted mt-3">No hay doctores registrados</p>
-                <a href="DoctoresController?accion=nuevo" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> Registrar Primer Doctor
+            <c:if test="${empty consultas}">
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle"></i> No se encontraron consultas cerradas
+                </div>
+            </c:if>
+
+            <div class="mt-3">
+                <a href="${pageContext.request.contextPath}/dashboard_recepcionista.jsp" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al Dashboard
                 </a>
             </div>
-        </c:if>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function confirmarEliminar(id) {
-            if (confirm('¿Está seguro de eliminar este doctor? Esta acción no se puede deshacer.')) {
-                window.location.href = 'DoctoresController?accion=eliminar&id=' + id;
-            }
-        }
-
-        // Búsqueda en tiempo real
-        document.getElementById('searchInput').addEventListener('input', filtrarDoctores);
-        document.getElementById('filterEspecialidad').addEventListener('change', filtrarDoctores);
-
-        function filtrarDoctores() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const especialidad = document.getElementById('filterEspecialidad').value;
-            const items = document.querySelectorAll('.doctor-item');
-
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                const itemEspecialidad = item.dataset.especialidad;
-                const matchSearch = text.includes(searchTerm);
-                const matchEspecialidad = !especialidad || itemEspecialidad === especialidad;
-
-                item.style.display = matchSearch && matchEspecialidad ? '' : 'none';
-            });
+        function imprimirReporte(consultaId) {
+            window.open('${pageContext.request.contextPath}/ConsultasController?accion=generarReporte&consultaId=' + consultaId, '_blank');
         }
     </script>
 </body>
