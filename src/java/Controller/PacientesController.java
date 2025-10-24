@@ -13,16 +13,16 @@ import java.util.List;
 import java.time.LocalDate;
 
 public class PacientesController extends HttpServlet {
-    
+
     PacientesDAO dao = new PacientesDAO();
     UsuarioDAO usuarioDao = new UsuarioDAO();
     PacientesModel p = new PacientesModel();
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String accion = request.getParameter("accion");
-        
+
         switch (accion) {
             case "listar":
                 listar(request, response);
@@ -47,7 +47,7 @@ public class PacientesController extends HttpServlet {
                 break;
         }
     }
-    
+
     protected void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -60,18 +60,18 @@ public class PacientesController extends HttpServlet {
             request.getRequestDispatcher("Pacientes/pacientes_lista.jsp").forward(request, response);
         }
     }
-    
+
     protected void nuevo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             String usuarioIdParam = request.getParameter("usuarioId");
-            
+
             if (usuarioIdParam != null && !usuarioIdParam.isEmpty()) {
                 long usuarioId = Long.parseLong(usuarioIdParam);
                 UsuariosResourse usuario = usuarioDao.BuscarPorId(usuarioId);
                 request.setAttribute("usuarioSeleccionado", usuario);
             }
-            
+
             List<UsuariosResourse> usuarios = usuarioDao.Listar();
             request.setAttribute("usuarios", usuarios);
             request.getRequestDispatcher("Pacientes/pacientes_nuevo.jsp").forward(request, response);
@@ -81,7 +81,7 @@ public class PacientesController extends HttpServlet {
             listar(request, response);
         }
     }
-    
+
     protected void registrar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -93,7 +93,7 @@ public class PacientesController extends HttpServlet {
             String contactoTelefono = request.getParameter("contactoEmergenciaTelefono");
             String historial = request.getParameter("historialMedico");
             String alergias = request.getParameter("alergias");
-            
+
             p.setUsuarioId(usuarioId);
             p.setFechaNacimiento(LocalDate.parse(fechaNacStr));
             p.setGenero(genero);
@@ -102,10 +102,13 @@ public class PacientesController extends HttpServlet {
             p.setContactoEmergenciaTelefono(contactoTelefono);
             p.setHistorialMedico(historial);
             p.setAlergias(alergias);
-            
+
             int resultado = dao.Agregar(p);
-            
-            if (resultado > 0) {
+
+            if (resultado == -1) {
+                request.setAttribute("error", "Este usuario ya está registrado como paciente");
+                nuevo(request, response);
+            } else if (resultado > 0) {
                 request.setAttribute("mensaje", "Paciente registrado exitosamente");
                 listar(request, response);
             } else {
@@ -118,13 +121,13 @@ public class PacientesController extends HttpServlet {
             nuevo(request, response);
         }
     }
-    
+
     protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             long id = Long.parseLong(request.getParameter("id"));
             PacientesModel paciente = dao.BuscarPorId(id);
-            
+
             if (paciente != null) {
                 request.setAttribute("paciente", paciente);
                 request.getRequestDispatcher("Pacientes/pacientes_editar.jsp").forward(request, response);
@@ -138,7 +141,7 @@ public class PacientesController extends HttpServlet {
             listar(request, response);
         }
     }
-    
+
     protected void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -151,7 +154,7 @@ public class PacientesController extends HttpServlet {
             String contactoTelefono = request.getParameter("contactoEmergenciaTelefono");
             String historial = request.getParameter("historialMedico");
             String alergias = request.getParameter("alergias");
-            
+
             PacientesModel paciente = new PacientesModel();
             paciente.setId(id);
             paciente.setUsuarioId(usuarioId);
@@ -162,15 +165,15 @@ public class PacientesController extends HttpServlet {
             paciente.setContactoEmergenciaTelefono(contactoTelefono);
             paciente.setHistorialMedico(historial);
             paciente.setAlergias(alergias);
-            
+
             int resultado = dao.Actualizar(paciente);
-            
+
             if (resultado > 0) {
                 request.setAttribute("mensaje", "Paciente actualizado exitosamente");
             } else {
                 request.setAttribute("error", "No se pudo actualizar el paciente");
             }
-            
+
             listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,13 +181,13 @@ public class PacientesController extends HttpServlet {
             listar(request, response);
         }
     }
-    
+
     protected void ver(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             long id = Long.parseLong(request.getParameter("id"));
             PacientesModel paciente = dao.BuscarPorId(id);
-            
+
             if (paciente != null) {
                 request.setAttribute("paciente", paciente);
                 request.getRequestDispatcher("Pacientes/pacientes_ver.jsp").forward(request, response);

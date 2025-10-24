@@ -1,7 +1,5 @@
 package Controller;
 
-
-
 import Model.UsuariosResourse;
 import DAO.UsuarioDAO;
 import DAO.DoctoresDAO;
@@ -16,15 +14,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public class DoctoresController extends HttpServlet {
-    
+
     DoctoresDAO dao = new DoctoresDAO();
     DoctoresModel doctor = new DoctoresModel();
-    
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         String accion = request.getParameter("accion");
-        
+
         switch (accion) {
             case "listar":
                 listar(request, response);
@@ -49,7 +47,7 @@ public class DoctoresController extends HttpServlet {
                 break;
         }
     }
-    
+
     protected void listar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -62,8 +60,7 @@ public class DoctoresController extends HttpServlet {
             request.getRequestDispatcher("Doctores/doctores_lista.jsp").forward(request, response);
         }
     }
-    
-    
+
     protected void listardoctores(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         UsuarioDAO dao = new UsuarioDAO();
@@ -71,13 +68,13 @@ public class DoctoresController extends HttpServlet {
         try {
             String rol = request.getParameter("rol");
             List<UsuariosResourse> lista;
-            
+
             if (rol != null && !rol.trim().isEmpty()) {
                 lista = dao.ListarPorRol(rol);
             } else {
                 lista = dao.Listar();
             }
-            
+
             request.setAttribute("doctores", lista);
             request.getRequestDispatcher("Doctores/usuarios_doctores.jsp").forward(request, response);
         } catch (Exception e) {
@@ -93,33 +90,36 @@ public class DoctoresController extends HttpServlet {
             int usuarioId = Integer.parseInt(request.getParameter("usuarioId"));
             String numeroLicencia = request.getParameter("numeroLicencia");
             String especializacion = request.getParameter("especializacion");
-            
+
             doctor.setUsuarioId(usuarioId);
             doctor.setNumeroLicencia(numeroLicencia);
             doctor.setEspecializacion(especializacion);
-            
+
             int resultado = dao.Agregar(doctor);
-            
-            if (resultado > 0) {
+
+            if (resultado == -1) {
+                request.setAttribute("error", "Este usuario ya está registrado como doctor");
+                nuevo(request, response);
+            } else if (resultado > 0) {
                 request.setAttribute("mensaje", "Doctor registrado exitosamente");
                 listar(request, response);
             } else {
                 request.setAttribute("error", "Error al registrar doctor");
-                request.getRequestDispatcher("Doctores/doctores_nuevo.jsp").forward(request, response);
+                nuevo(request, response);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error: " + e.getMessage());
-            request.getRequestDispatcher("Doctores/doctores_nuevo.jsp").forward(request, response);
+            nuevo(request, response);
         }
     }
-    
+
     protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             long id = Long.parseLong(request.getParameter("id"));
             DoctoresModel doctorEditar = dao.BuscarPorId(id);
-            
+
             if (doctorEditar != null) {
                 request.setAttribute("doctor", doctorEditar);
                 request.getRequestDispatcher("Doctores/doctores_editar.jsp").forward(request, response);
@@ -133,7 +133,7 @@ public class DoctoresController extends HttpServlet {
             listar(request, response);
         }
     }
-    
+
     protected void actualizar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
@@ -141,21 +141,21 @@ public class DoctoresController extends HttpServlet {
             int usuarioId = Integer.parseInt(request.getParameter("usuarioId"));
             String numeroLicencia = request.getParameter("numeroLicencia");
             String especializacion = request.getParameter("especializacion");
-            
+
             DoctoresModel doctorActualizar = new DoctoresModel();
             doctorActualizar.setId(id);
             doctorActualizar.setUsuarioId(usuarioId);
             doctorActualizar.setNumeroLicencia(numeroLicencia);
             doctorActualizar.setEspecializacion(especializacion);
-            
+
             int resultado = dao.Actualizar(doctorActualizar);
-            
+
             if (resultado > 0) {
                 request.setAttribute("mensaje", "Doctor actualizado exitosamente");
             } else {
                 request.setAttribute("error", "No se pudo actualizar el doctor");
             }
-            
+
             listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,19 +163,19 @@ public class DoctoresController extends HttpServlet {
             listar(request, response);
         }
     }
-    
+
     protected void eliminar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             long id = Long.parseLong(request.getParameter("id"));
             int resultado = dao.Eliminar(id);
-            
+
             if (resultado > 0) {
                 request.setAttribute("mensaje", "Doctor eliminado exitosamente");
             } else {
                 request.setAttribute("error", "No se pudo eliminar el doctor");
             }
-            
+
             listar(request, response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -183,28 +183,29 @@ public class DoctoresController extends HttpServlet {
             listar(request, response);
         }
     }
-    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
-    try {
-        UsuarioDAO usuarioDao = new UsuarioDAO();
-        String usuarioIdParam = request.getParameter("usuarioId");
-        
-        if (usuarioIdParam != null && !usuarioIdParam.isEmpty()) {
-            long usuarioId = Long.parseLong(usuarioIdParam);
-            UsuariosResourse usuario = usuarioDao.BuscarPorId(usuarioId);
-            request.setAttribute("usuarioSeleccionado", usuario);
-        }
-        
-        List<UsuariosResourse> usuarios = usuarioDao.Listar();
-        request.setAttribute("usuarios", usuarios);
-        request.getRequestDispatcher("Doctores/doctores_nuevo.jsp").forward(request, response);
-    } catch (Exception e) {
-        e.printStackTrace();
-        request.setAttribute("error", "Error al cargar formulario: " + e.getMessage());
-        listar(request, response);
-    }
-}
 
+    protected void nuevo(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        try {
+            UsuarioDAO usuarioDao = new UsuarioDAO();
+            String usuarioIdParam = request.getParameter("usuarioId");
+
+            if (usuarioIdParam != null && !usuarioIdParam.isEmpty()) {
+                long usuarioId = Long.parseLong(usuarioIdParam);
+                UsuariosResourse usuario = usuarioDao.BuscarPorId(usuarioId);
+                request.setAttribute("usuarioSeleccionado", usuario);
+            }
+
+            List<UsuariosResourse> usuarios = usuarioDao.Listar();
+            request.setAttribute("usuarios", usuarios);
+            request.getRequestDispatcher("Doctores/doctores_nuevo.jsp").forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar formulario: " + e.getMessage());
+            listar(request, response);
+        }
+
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
