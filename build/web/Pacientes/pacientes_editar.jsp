@@ -106,7 +106,7 @@
                             </div>
                             
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="PacientesController?accion=listar" class="btn btn-secondary">
+                                <a href="UsuariosController?accion=listar'" class="btn btn-secondary">
                                     <i class="bi bi-arrow-left"></i> Cancelar
                                 </a>
                                 <button type="submit" class="btn btn-warning">

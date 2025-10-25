@@ -39,30 +39,11 @@
             margin-bottom: 0.5rem;
         }
 
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            padding: 0.75rem;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
-        }
-
         .btn-custom {
             padding: 0.75rem 2rem;
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.3s ease;
-        }
-
-        .section-title {
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 3px solid var(--primary-color);
         }
     </style>
 </head>
@@ -79,21 +60,54 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="form-card">
-                    <h2 class="section-title">
-                        <i class="bi bi-pencil-square"></i> Editar Cita
+                    <h2 class="text-primary mb-4">
+                        <i class="bi bi-pencil-square"></i> Editar Cita #${cita.id}
                     </h2>
+
+                    <!-- REEMPLAZA ESTA SECCIÓN -->
+                    <c:if test="${not empty error}">
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> ${error}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </c:if>
+
+                    <c:if test="${not empty mensaje}">
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle"></i> ${mensaje}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </c:if>
+                    <!-- FIN DE LA SECCIÓN REEMPLAZADA -->
 
                     <form action="${pageContext.request.contextPath}/CitasController" method="post">
                         <input type="hidden" name="accion" value="actualizar">
                         <input type="hidden" name="id" value="${cita.id}">
 
                         <div class="mb-3">
+                            <label for="pacienteId" class="form-label">
+                                <i class="bi bi-person"></i> Paciente *
+                            </label>
+                            <select class="form-select" id="pacienteId" name="pacienteId" required>
+                                <option value="">Seleccione un paciente</option>
+                                <c:forEach var="paciente" items="${pacientes}">
+                                    <option value="${paciente.id}" 
+                                        ${cita.pacienteId == paciente.id ? 'selected' : ''}>
+                                        ${paciente.usuarioNombre} ${paciente.usuarioApellido}
+                                    </option>
+                                </c:forEach>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="doctorId" class="form-label">
                                 <i class="bi bi-person-badge"></i> Doctor *
                             </label>
                             <select class="form-select" id="doctorId" name="doctorId" required>
+                                <option value="">Seleccione un doctor</option>
                                 <c:forEach var="doctor" items="${doctores}">
-                                    <option value="${doctor.id}" ${cita.doctorId == doctor.id ? 'selected' : ''}>
+                                    <option value="${doctor.id}" 
+                                        ${cita.doctorId == doctor.id ? 'selected' : ''}>
                                         Dr. ${doctor.usuarioNombre} ${doctor.usuarioApellido} - ${doctor.especializacion}
                                     </option>
                                 </c:forEach>
@@ -103,14 +117,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="fechaCita" class="form-label">
-                                    <i class="bi bi-calendar"></i> Fecha de la Cita *
+                                    <i class="bi bi-calendar"></i> Fecha *
                                 </label>
                                 <input type="date" class="form-control" id="fechaCita" name="fechaCita" 
                                        value="${cita.fechaCita}" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="horaCita" class="form-label">
-                                    <i class="bi bi-clock"></i> Hora de la Cita *
+                                    <i class="bi bi-clock"></i> Hora *
                                 </label>
                                 <input type="time" class="form-control" id="horaCita" name="horaCita" 
                                        value="${cita.horaCita}" required>
@@ -118,19 +132,32 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="motivo" class="form-label">
-                                <i class="bi bi-chat-left-text"></i> Motivo de la Consulta *
+                            <label for="estado" class="form-label">
+                                <i class="bi bi-info-circle"></i> Estado
                             </label>
-                            <textarea class="form-control" id="motivo" name="motivo" rows="3" required>${cita.motivo}</textarea>
+                            <select class="form-select" id="estado" name="estado">
+                                <option value="programada" ${cita.estado == 'programada' ? 'selected' : ''}>Programada</option>
+                                <option value="confirmada" ${cita.estado == 'confirmada' ? 'selected' : ''}>Confirmada</option>
+                                <option value="completada" ${cita.estado == 'completada' ? 'selected' : ''}>Completada</option>
+                                <option value="cancelada" ${cita.estado == 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">
+                                <i class="bi bi-chat-left-text"></i> Motivo *
+                            </label>
+                            <textarea class="form-control" id="motivo" name="motivo" rows="3" 
+                                      required placeholder="Describa el motivo de la consulta">${cita.motivo}</textarea>
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="${pageContext.request.contextPath}/CitasController?accion=citasPaciente&pacienteId=${cita.pacienteId}" 
+                            <a href="${pageContext.request.contextPath}/CitasController?accion=listar" 
                                class="btn btn-secondary btn-custom">
                                 <i class="bi bi-arrow-left"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary btn-custom">
-                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                                <i class="bi bi-check-circle"></i> Actualizar Cita
                             </button>
                         </div>
                     </form>

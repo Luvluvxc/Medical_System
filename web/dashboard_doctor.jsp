@@ -10,10 +10,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-dark: #1e40af;
+            --primary-color: #059669;
+            --primary-dark: #047857;
+            --primary-light: #10b981;
             --secondary-color: #0ea5e9;
-            --light-bg: #f0f9ff;
+            --accent-color: #06b6d4;
+            --light-bg: #f0fdf4;
         }
 
         body {
@@ -44,13 +46,13 @@
         }
 
         .sidebar .nav-link:hover {
-            background-color: #eff6ff;
+            background-color: #f0fdf4;
             color: var(--primary-color);
             border-left-color: var(--primary-color);
         }
 
         .sidebar .nav-link.active {
-            background-color: #dbeafe;
+            background-color: #dcfce7;
             color: var(--primary-color);
             border-left-color: var(--primary-color);
         }
@@ -61,49 +63,60 @@
             border-radius: 12px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-        }
-
-        .doctor-info-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
         }
 
         .cita-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
+            border: none;
+            border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 4px solid var(--primary-color);
+            margin-bottom: 1rem;
             transition: all 0.3s ease;
         }
 
         .cita-card:hover {
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            transform: translateX(5px);
+        }
+
+        .cita-card.programada {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .cita-card.completada {
+            border-left: 4px solid #10b981;
+        }
+
+        .cita-card.cancelada {
+            border-left: 4px solid #ef4444;
+        }
+
+        .badge-estado {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+
+        .btn-consulta {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-consulta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
         }
 
         .section-title {
-            color: var(--primary-color);
+            font-size: 1.5rem;
             font-weight: 600;
+            color: #1e293b;
             margin-bottom: 1.5rem;
             padding-bottom: 0.75rem;
             border-bottom: 3px solid var(--primary-color);
-        }
-
-        .badge-programada {
-            background-color: #3b82f6;
-        }
-
-        .btn-action {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            margin: 0.25rem;
+            display: inline-block;
         }
     </style>
 </head>
@@ -138,11 +151,11 @@
                     <a class="nav-link active" href="dashboard_doctor.jsp">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/DoctoresController?accion=misCitas">
+                    <a class="nav-link" href="${pageContext.request.contextPath}/CitasController?accion=listarDoctor">
                         <i class="bi bi-calendar-check"></i> Mis Citas
                     </a>
-                    <a class="nav-link" href="${pageContext.request.contextPath}/DoctoresController?accion=miPerfil">
-                        <i class="bi bi-person-badge"></i> Mi Perfil
+                    <a class="nav-link" href="${pageContext.request.contextPath}/ConsultasController?accion=listarMisConsultas">
+                        <i class="bi bi-file-medical"></i> Mis Consultas
                     </a>
                 </nav>
             </div>
@@ -151,8 +164,8 @@
                 <div class="welcome-card">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2>Bienvenido, Dr. ${usuario.nombre} ${usuario.apellido}</h2>
-                            <p>Panel de Doctor - Sistema de Gestión Médica</p>
+                            <h2>Bienvenido, Dr. ${usuario.nombre}</h2>
+                            <p>Panel Médico - Gestión de Consultas y Pacientes</p>
                         </div>
                         <div>
                             <span class="badge bg-white text-primary fs-6 px-3 py-2">
@@ -163,163 +176,168 @@
                     </div>
                 </div>
 
-                <div class="doctor-info-card">
-                    <h4 class="section-title">
-                        <i class="bi bi-person-badge"></i> Mi Información
-                    </h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Nombre:</strong> Dr. ${doctor.usuarioNombre} ${doctor.usuarioApellido}</p>
-                            <p><strong>Especialización:</strong> ${doctor.especializacion}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Licencia:</strong> ${doctor.numeroLicencia}</p>
-                            <p><strong>Correo:</strong> ${doctor.usuarioCorreo}</p>
-                        </div>
+                <!-- Citas del Día -->
+                <div class="row">
+                    <div class="col-12">
+                        <h3 class="section-title">Citas de Hoy</h3>
+                        
+                        <c:if test="${empty citasHoy}">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No tienes citas programadas para hoy.
+                            </div>
+                        </c:if>
+
+                        <c:forEach var="cita" items="${citasHoy}">
+                            <div class="card cita-card ${cita.estado}">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <h5 class="card-title">${cita.pacienteNombre} ${cita.pacienteApellido}</h5>
+                                            <p class="card-text text-muted mb-1">
+                                                <i class="bi bi-clock"></i> ${cita.horaCita}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p class="mb-1"><strong>Motivo:</strong></p>
+                                            <p class="text-muted">${cita.motivo}</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge badge-estado 
+                                                ${cita.estado == 'programada' ? 'bg-primary' : 
+                                                  cita.estado == 'completada' ? 'bg-success' : 
+                                                  'bg-danger'}">
+                                                ${cita.estado}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <c:if test="${cita.estado == 'programada'}">
+                                                <button class="btn btn-consulta me-2" 
+                                                        onclick="abrirModalConsulta(${cita.id})">
+                                                    <i class="bi bi-file-medical"></i> Realizar Consulta
+                                                </button>
+                                            </c:if>
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="verDetallesPaciente(${cita.pacienteId})">
+                                                <i class="bi bi-person"></i> Ver Paciente
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
                     </div>
                 </div>
 
-                <h3 class="section-title">
-                    <i class="bi bi-calendar-check"></i> Citas de Hoy
-                </h3>
-
-                <c:forEach var="cita" items="${citasHoy}">
-                    <div class="cita-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h5><i class="bi bi-person"></i> ${cita.pacienteNombre} ${cita.pacienteApellido}</h5>
-                                <p class="mb-1"><i class="bi bi-clock"></i> <strong>Hora:</strong> ${cita.horaCita}</p>
-                                <p class="mb-1"><i class="bi bi-chat-left-text"></i> <strong>Motivo:</strong> ${cita.motivo}</p>
-                                <span class="badge badge-${cita.estado}">${cita.estado}</span>
+                <!-- Próximas Citas -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h3 class="section-title">Próximas Citas</h3>
+                        
+                        <c:if test="${empty proximasCitas}">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No tienes citas programadas para los próximos días.
                             </div>
-                            <div class="col-md-6 text-end">
-                                <c:if test="${cita.estado == 'programada'}">
-                                    <button class="btn btn-success btn-action" onclick="cerrarConsulta(${cita.id})">
-                                        <i class="bi bi-check-circle"></i> Cerrar Consulta
-                                    </button>
-                                    <button class="btn btn-danger btn-action" onclick="cancelarCita(${cita.id})">
-                                        <i class="bi bi-x-circle"></i> Cancelar
-                                    </button>
-                                </c:if>
-                                <c:if test="${cita.estado == 'completada'}">
-                                    <a href="${pageContext.request.contextPath}/ConsultasController?accion=ver&citaId=${cita.id}" class="btn btn-info btn-action">
-                                        <i class="bi bi-eye"></i> Ver Consulta
-                                    </a>
-                                </c:if>
+                        </c:if>
+
+                        <c:forEach var="cita" items="${proximasCitas}">
+                            <div class="card cita-card ${cita.estado}">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-3">
+                                            <h5 class="card-title">${cita.pacienteNombre} ${cita.pacienteApellido}</h5>
+                                            <p class="card-text text-muted mb-1">
+                                                <i class="bi bi-calendar"></i> ${cita.fechaCita}
+                                            </p>
+                                            <p class="card-text text-muted">
+                                                <i class="bi bi-clock"></i> ${cita.horaCita}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <p class="mb-1"><strong>Motivo:</strong></p>
+                                            <p class="text-muted">${cita.motivo}</p>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <span class="badge badge-estado bg-primary">
+                                                ${cita.estado}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="verDetallesPaciente(${cita.pacienteId})">
+                                                <i class="bi bi-person"></i> Ver Paciente
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </c:forEach>
                     </div>
-                </c:forEach>
-
-                <c:if test="${empty citasHoy}">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> No hay citas programadas para hoy
-                    </div>
-                </c:if>
-
-                <h3 class="section-title mt-4">
-                    <i class="bi bi-calendar-week"></i> Próximas Citas
-                </h3>
-
-                <c:forEach var="cita" items="${proximasCitas}">
-                    <div class="cita-card">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <h5><i class="bi bi-person"></i> ${cita.pacienteNombre} ${cita.pacienteApellido}</h5>
-                                <p class="mb-1"><i class="bi bi-calendar3"></i> <strong>Fecha:</strong> ${cita.fechaCita}</p>
-                                <p class="mb-1"><i class="bi bi-clock"></i> <strong>Hora:</strong> ${cita.horaCita}</p>
-                                <p class="mb-1"><i class="bi bi-chat-left-text"></i> <strong>Motivo:</strong> ${cita.motivo}</p>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <span class="badge badge-${cita.estado}">${cita.estado}</span>
-                            </div>
-                        </div>
-                    </div>
-                </c:forEach>
-
-                <c:if test="${empty proximasCitas}">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> No hay próximas citas programadas
-                    </div>
-                </c:if>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Cerrar Consulta -->
-    <div class="modal fade" id="cerrarConsultaModal" tabindex="-1">
+    <!-- Modal para Realizar Consulta -->
+    <div class="modal fade" id="modalConsulta" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="bi bi-check-circle"></i> Cerrar Consulta</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title">Realizar Consulta Médica</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="${pageContext.request.contextPath}/ConsultasController" method="post">
-                    <input type="hidden" name="accion" value="cerrar">
-                    <input type="hidden" name="citaId" id="cerrarCitaId">
-                    <div class="modal-body">
+                <div class="modal-body">
+                    <form id="formConsulta" action="${pageContext.request.contextPath}/ConsultasController" method="post">
+                        <input type="hidden" name="accion" value="registrar">
+                        <input type="hidden" name="citaId" id="citaId">
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Diagnóstico *</label>
-                            <textarea class="form-control" name="diagnostico" rows="3" required placeholder="Ingrese el diagnóstico"></textarea>
+                            <label for="diagnostico" class="form-label">Diagnóstico</label>
+                            <textarea class="form-control" id="diagnostico" name="diagnostico" 
+                                      rows="4" placeholder="Ingrese el diagnóstico del paciente..." required></textarea>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Plan de Tratamiento *</label>
-                            <textarea class="form-control" name="planTratamiento" rows="3" required placeholder="Ingrese el plan de tratamiento"></textarea>
+                            <label for="planTratamiento" class="form-label">Plan de Tratamiento</label>
+                            <textarea class="form-control" id="planTratamiento" name="planTratamiento" 
+                                      rows="3" placeholder="Describa el plan de tratamiento..."></textarea>
                         </div>
+                        
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Observaciones</label>
-                            <textarea class="form-control" name="observaciones" rows="2" placeholder="Observaciones adicionales (opcional)"></textarea>
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" 
+                                      rows="2" placeholder="Observaciones adicionales..."></textarea>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Guardar Consulta</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cancelar Cita -->
-    <div class="modal fade" id="cancelModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-x-circle"></i> Cancelar Cita</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </form>
                 </div>
-                <form action="${pageContext.request.contextPath}/CitasController" method="post">
-                    <input type="hidden" name="accion" value="cancelar">
-                    <input type="hidden" name="citaId" id="cancelCitaId">
-                    <input type="hidden" name="returnUrl" value="dashboard_doctor">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Motivo de Cancelación *</label>
-                            <textarea class="form-control" name="motivoCancelacion" rows="3" required placeholder="Ingrese el motivo de la cancelación"></textarea>
-                        </div>
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i> Esta acción no se puede deshacer
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="submit" class="btn btn-danger">Confirmar Cancelación</button>
-                    </div>
-                </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="registrarConsulta()">
+                        <i class="bi bi-check-lg"></i> Finalizar Consulta
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function cerrarConsulta(citaId) {
-            document.getElementById('cerrarCitaId').value = citaId;
-            new bootstrap.Modal(document.getElementById('cerrarConsultaModal')).show();
+        function abrirModalConsulta(citaId) {
+            document.getElementById('citaId').value = citaId;
+            const modal = new bootstrap.Modal(document.getElementById('modalConsulta'));
+            modal.show();
         }
 
-        function cancelarCita(citaId) {
-            document.getElementById('cancelCitaId').value = citaId;
-            new bootstrap.Modal(document.getElementById('cancelModal')).show();
+        function registrarConsulta() {
+            const form = document.getElementById('formConsulta');
+            if (form.checkValidity()) {
+                form.submit();
+            } else {
+                form.reportValidity();
+            }
+        }
+
+        function verDetallesPaciente(pacienteId) {
+            window.location.href = '${pageContext.request.contextPath}/PacientesController?accion=ver&id=' + pacienteId;
         }
     </script>
 </body>

@@ -46,15 +46,6 @@
             margin-top: 5px;
             font-size: 0.9rem;
         }
-        .debug-info {
-            display: none; /* Cambiar a 'block' temporalmente para debug */
-            background: #f8f9fa;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            font-size: 0.8rem;
-            color: #666;
-        }
     </style>
 </head>
 <body>
@@ -70,20 +61,6 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="form-container">
-                    
-                    <!-- DEBUG: Información temporal para ver qué datos llegan -->
-                    <div class="debug-info">
-                        <strong>DEBUG INFO:</strong><br>
-                        pacienteId: <c:out value="${pacienteId}"/> | 
-                        doctorId: <c:out value="${doctorId}"/> | 
-                        fechaCita: <c:out value="${fechaCita}"/> | 
-                        horaCita: <c:out value="${horaCita}"/> | 
-                        motivo: <c:out value="${motivo}"/><br>
-                        conflictoHorario: <c:out value="${conflictoHorario}"/><br>
-                        Param.pacienteId: <c:out value="${param.pacienteId}"/> |
-                        Param.doctorId: <c:out value="${param.doctorId}"/>
-                    </div>
-
                     <h2 class="text-primary mb-4">
                         <i class="bi bi-calendar-plus"></i> Crear Nueva Cita
                     </h2>
@@ -131,9 +108,9 @@
                     <form action="${pageContext.request.contextPath}/CitasController" method="post" id="citaForm">
                         <input type="hidden" name="accion" value="registrar">
                         
-                        <!-- Si viene de un paciente específico por parámetro -->
+                        <!-- Si viene de un paciente específico -->
                         <c:if test="${not empty param.pacienteId}">
-                            <input type="hidden" name="pacienteIdFromParam" value="${param.pacienteId}">
+                            <input type="hidden" name="pacienteId" value="${param.pacienteId}">
                         </c:if>
 
                         <div class="mb-3">
@@ -144,17 +121,7 @@
                                 <option value="">Seleccione un paciente</option>
                                 <c:forEach var="paciente" items="${pacientes}">
                                     <option value="${paciente.id}" 
-                                        <c:choose>
-                                            <c:when test="${not empty pacienteId && pacienteId == paciente.id}">
-                                                selected
-                                            </c:when>
-                                            <c:when test="${not empty param.pacienteId && param.pacienteId == paciente.id}">
-                                                selected
-                                            </c:when>
-                                            <c:when test="${not empty pacienteSeleccionado && pacienteSeleccionado.id == paciente.id}">
-                                                selected
-                                            </c:when>
-                                        </c:choose>>
+                                        <c:if test="${(param.pacienteId == paciente.id) || (pacienteId == paciente.id)}">selected</c:if>>
                                         ${paciente.usuarioNombre} ${paciente.usuarioApellido} 
                                         <c:if test="${not empty paciente.codigoPaciente}">
                                             - ${paciente.codigoPaciente}
@@ -172,14 +139,7 @@
                                 <option value="">Seleccione un doctor</option>
                                 <c:forEach var="doctor" items="${doctores}">
                                     <option value="${doctor.id}" 
-                                        <c:choose>
-                                            <c:when test="${not empty doctorId && doctorId == doctor.id}">
-                                                selected
-                                            </c:when>
-                                            <c:when test="${not empty param.doctorId && param.doctorId == doctor.id}">
-                                                selected
-                                            </c:when>
-                                        </c:choose>>
+                                        <c:if test="${not empty doctorId && doctorId == doctor.id}">selected</c:if>>
                                         Dr. ${doctor.usuarioNombre} ${doctor.usuarioApellido} 
                                         - ${doctor.especializacion}
                                     </option>
@@ -210,10 +170,7 @@
                                 </label>
                                 <input type="date" class="form-control ${not empty conflictoHorario ? 'time-input-highlight' : ''}" 
                                        id="fechaCita" name="fechaCita" required 
-                                       value="<c:choose>
-                                               <c:when test="${not empty fechaCita}">${fechaCita}</c:when>
-                                               <c:when test="${not empty param.fechaCita}">${param.fechaCita}</c:when>
-                                             </c:choose>"
+                                       value="${not empty fechaCita ? fechaCita : ''}"
                                        min="<%= java.time.LocalDate.now() %>">
                             </div>
                             <div class="col-md-6">
@@ -225,10 +182,7 @@
                                 </label>
                                 <input type="time" class="form-control ${not empty conflictoHorario ? 'time-input-highlight' : ''}" 
                                        id="horaCita" name="horaCita" 
-                                       value="<c:choose>
-                                               <c:when test="${not empty horaCita}">${horaCita}</c:when>
-                                               <c:when test="${not empty param.horaCita}">${param.horaCita}</c:when>
-                                             </c:choose>"
+                                       value="${not empty horaCita ? horaCita : ''}"
                                        min="08:00" max="18:00" step="1800" required>
                                 <small class="text-muted">Horario: 8:00 AM - 6:00 PM (citas cada 30 minutos)</small>
                                 
@@ -260,10 +214,7 @@
                                 <i class="bi bi-chat-left-text"></i> Motivo *
                             </label>
                             <textarea class="form-control" id="motivo" name="motivo" rows="3" 
-                                      required placeholder="Describa el motivo de la consulta"><c:choose>
-                                        <c:when test="${not empty motivo}">${motivo}</c:when>
-                                        <c:when test="${not empty param.motivo}">${param.motivo}</c:when>
-                                      </c:choose></textarea>
+                                      required placeholder="Describa el motivo de la consulta">${not empty motivo ? motivo : ''}</textarea>
                         </div>
 
                         <div class="alert alert-info">
@@ -297,11 +248,8 @@
         document.getElementById('citaForm').addEventListener('submit', function(e) {
             const fecha = document.getElementById('fechaCita').value;
             const hora = document.getElementById('horaCita').value;
-            const paciente = document.getElementById('pacienteId').value;
-            const doctor = document.getElementById('doctorId').value;
-            const motivo = document.getElementById('motivo').value;
             
-            if (!fecha || !hora || !paciente || !doctor || !motivo.trim()) {
+            if (!fecha || !hora) {
                 e.preventDefault();
                 alert('Por favor complete todos los campos obligatorios');
                 return;
@@ -331,41 +279,31 @@
         // Focus on hora input if there was a conflict
         <c:if test="${not empty conflictoHorario}">
             document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('horaCita').focus();
+                document.getElementById('horaCita').select();
+                
+                // Agregar efecto de parpadeo suave
                 const horaInput = document.getElementById('horaCita');
-                if (horaInput) {
-                    horaInput.focus();
-                    horaInput.select();
-                    
-                    // Agregar efecto de parpadeo suave
-                    let blinkCount = 0;
-                    const blinkInterval = setInterval(() => {
-                        horaInput.style.boxShadow = blinkCount % 2 === 0 ? 
-                            '0 0 0 0.2rem rgba(220, 53, 69, 0.5)' : 
-                            '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
-                        blinkCount++;
-                        if (blinkCount > 6) {
-                            clearInterval(blinkInterval);
-                            horaInput.style.boxShadow = '';
-                        }
-                    }, 300);
-                }
+                let blinkCount = 0;
+                const blinkInterval = setInterval(() => {
+                    horaInput.style.boxShadow = blinkCount % 2 === 0 ? 
+                        '0 0 0 0.2rem rgba(220, 53, 69, 0.5)' : 
+                        '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+                    blinkCount++;
+                    if (blinkCount > 6) {
+                        clearInterval(blinkInterval);
+                        horaInput.style.boxShadow = '';
+                    }
+                }, 300);
             });
         </c:if>
 
         // Mostrar información del doctor cuando se selecciona
         document.getElementById('doctorId').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
-            console.log('Doctor seleccionado:', selectedOption.text);
-        });
-
-        // Para debug: mostrar información temporalmente
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Valores cargados en el formulario:');
-            console.log('Paciente ID:', document.getElementById('pacienteId').value);
-            console.log('Doctor ID:', document.getElementById('doctorId').value);
-            console.log('Fecha:', document.getElementById('fechaCita').value);
-            console.log('Hora:', document.getElementById('horaCita').value);
-            console.log('Motivo:', document.getElementById('motivo').value);
+            if (selectedOption.value) {
+                console.log('Doctor seleccionado:', selectedOption.text);
+            }
         });
     </script>
 </body>
