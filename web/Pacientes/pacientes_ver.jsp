@@ -332,7 +332,7 @@
 
                     <!-- Botones de Acción -->
                     <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="${pageContext.request.contextPath}/PacientesController?accion=listar" 
+                        <a href="UsuariosController?accion=listar'" 
                            class="btn btn-secondary action-btn">
                             <i class="bi bi-arrow-left me-2"></i>Volver a la Lista
                         </a>

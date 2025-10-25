@@ -139,43 +139,61 @@ public class Doctores {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.TEXT_PLAIN)
     public int agregar(String jsonString) {
-        System.out.println("[v0] API Doctores recibió: " + jsonString);
+        System.out.println("[REST] Solicitud recibida para agregar doctor: " + jsonString);
 
         String checkSql = "SELECT COUNT(*) as count FROM doctores WHERE usuario_id = ?";
         String sql = "INSERT INTO doctores (usuario_id, numero_licencia, especializacion, "
                 + "creado_en, actualizado_en) "
                 + "VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
         try {
             JSONObject json = new JSONObject(jsonString);
             int usuarioId = json.getInt("usuarioId");
+            String numeroLicencia = json.getString("numeroLicencia");
+            String especializacion = json.optString("especializacion", "");
+
+            System.out.println("[REST] Datos parseados - usuarioId: " + usuarioId
+                    + ", licencia: " + numeroLicencia
+                    + ", especializacion: " + especializacion);
 
             con = cn.getConnection();
 
+            // Verificar si ya existe
             ps = con.prepareStatement(checkSql);
             ps.setInt(1, usuarioId);
             rs = ps.executeQuery();
 
             if (rs.next() && rs.getInt("count") > 0) {
-                System.out.println("[v0] Error: Ya existe un doctor con este usuario_id: " + usuarioId);
-                return -1; // Return -1 to indicate duplicate
+                System.out.println("[REST] Error: Ya existe un doctor con usuario_id: " + usuarioId);
+                return -1;
             }
 
             rs.close();
             ps.close();
 
+            // Insertar nuevo doctor
             ps = con.prepareStatement(sql);
             ps.setInt(1, usuarioId);
-            ps.setString(2, json.getString("numeroLicencia"));
-            ps.setString(3, json.optString("especializacion", null));
+            ps.setString(2, numeroLicencia);
+            ps.setString(3, especializacion);
 
             int result = ps.executeUpdate();
-            System.out.println("[v0] Doctor insertado, filas afectadas: " + result);
+            System.out.println("[REST] Doctor insertado, filas afectadas: " + result);
 
             return result > 0 ? 1 : 0;
 
+        } catch (SQLException e) {
+            System.out.println("[REST] Error SQL: " + e.getMessage());
+            System.out.println("[REST] SQL State: " + e.getSQLState());
+            System.out.println("[REST] Error Code: " + e.getErrorCode());
+            e.printStackTrace();
+            return 0;
         } catch (Exception e) {
-            System.out.println("[v0] Error en agregar doctor: " + e.getMessage());
+            System.out.println("[REST] Error general: " + e.getMessage());
             e.printStackTrace();
             return 0;
         } finally {
@@ -228,6 +246,64 @@ public class Doctores {
                 ex.printStackTrace();
             }
         }
+    }
+
+    @GET
+    @Path("/usuario/{usuarioId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public DoctoresModel buscarPorUsuarioId(@PathParam("usuarioId") int usuarioId) {
+        String sql = "SELECT d.*, u.nombre as usuario_nombre, u.apellido as usuario_apellido, "
+                + "u.correo as usuario_correo, u.telefono as usuario_telefono, "
+                + "u.rol as usuario_rol, u.activo as usuario_activo "
+                + "FROM doctores d "
+                + "INNER JOIN usuarios u ON d.usuario_id = u.id "
+                + "WHERE d.usuario_id = ?";
+        DoctoresModel d = null;
+
+        try {
+            con = cn.getConnection();
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, usuarioId);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                d = new DoctoresModel();
+                d.setId(rs.getLong("id"));
+                d.setUsuarioId(rs.getInt("usuario_id"));
+                d.setNumeroLicencia(rs.getString("numero_licencia"));
+                d.setEspecializacion(rs.getString("especializacion"));
+
+                Timestamp creado = rs.getTimestamp("creado_en");
+                d.setCreadoEn(creado != null ? creado.toLocalDateTime() : null);
+
+                Timestamp actualizado = rs.getTimestamp("actualizado_en");
+                d.setActualizadoEn(actualizado != null ? actualizado.toLocalDateTime() : null);
+
+                d.setUsuarioNombre(rs.getString("usuario_nombre"));
+                d.setUsuarioApellido(rs.getString("usuario_apellido"));
+                d.setUsuarioCorreo(rs.getString("usuario_correo"));
+                d.setUsuarioTelefono(rs.getString("usuario_telefono"));
+                d.setUsuarioRol(rs.getString("usuario_rol"));
+                d.setUsuarioActivo(rs.getBoolean("usuario_activo"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (con != null) {
+                    con.close();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return d;
     }
 
     @DELETE

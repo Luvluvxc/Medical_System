@@ -174,11 +174,11 @@ public class PacientesController extends HttpServlet {
                 request.setAttribute("error", "No se pudo actualizar el paciente");
             }
 
-            listar(request, response);
+            response.sendRedirect(request.getContextPath() + "/UsuariosController?accion=listar");
+
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Error al actualizar paciente: " + e.getMessage());
-            listar(request, response);
+             response.sendRedirect(request.getContextPath() + "/UsuariosController?accion=listar&error=Error+al+actualizar+paciente");
         }
     }
 

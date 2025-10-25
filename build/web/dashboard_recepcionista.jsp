@@ -257,15 +257,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card action-card accent" onclick="location.href='${pageContext.request.contextPath}/ConsultasController?accion=listarCerradas'">
-                            <div class="card-body">
-                                <i class="bi bi-file-medical-fill"></i>
-                                <h4 class="fw-bold">Consultas</h4>
-                                <p class="mb-0">Ver consultas cerradas</p>
-                            </div>
-                        </div>
-                    </div>
+                    
                     
                 </div>
             </div>

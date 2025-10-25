@@ -307,38 +307,7 @@
                                 </div>
                             </div>
 
-                            <!-- Información Adicional -->
-                            <div class="form-section">
-                                <h4 class="section-divider">
-                                    <i class="bi bi-clock me-2"></i>Información Adicional
-                                </h4>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Horario de Consulta</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-clock"></i></span>
-                                            <input type="text" class="form-control" name="horarioConsulta" 
-                                                   placeholder="Ej: Lunes a Viernes 8:00 - 16:00">
-                                        </div>
-                                        <small class="text-muted mt-2 d-block">
-                                            <i class="bi bi-info-circle"></i> 
-                                            Horario de atención al paciente (opcional)
-                                        </small>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Años de Experiencia</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-award"></i></span>
-                                            <input type="number" class="form-control" name="anosExperiencia" 
-                                                   placeholder="Ej: 5" min="0" max="50">
-                                        </div>
-                                        <small class="text-muted mt-2 d-block">
-                                            <i class="bi bi-info-circle"></i> 
-                                            Años de experiencia profesional (opcional)
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+                            
 
                             <!-- Botones de Acción -->
                             <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">

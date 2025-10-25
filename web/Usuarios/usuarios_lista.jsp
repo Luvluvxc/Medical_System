@@ -327,11 +327,7 @@
                                                            title="Ver perfil de paciente">
                                                             <i class="bi bi-eye"></i>
                                                         </a>
-                                                        <a href="${pageContext.request.contextPath}/CitasController?accion=nuevo&pacienteId=${usuario.id}" 
-                                                           class="btn btn-sm btn-primary btn-action" 
-                                                           title="Crear cita">
-                                                            <i class="bi bi-calendar-plus"></i>
-                                                        </a>
+
                                                     </c:if>
 
                                                     <c:if test="${usuario.rol == 'doctor'}">
@@ -341,12 +337,12 @@
                                                            title="Crear perfil de doctor">
                                                             <i class="bi bi-person-badge"></i>
                                                         </a>
-                                                        <a href="${pageContext.request.contextPath}/DoctoresController?accion=ver&id=" 
-                                                           class="btn btn-sm btn-info btn-action btn-ver-doctor d-none" 
-                                                           data-usuario-id="${usuario.id}"
-                                                           title="Ver perfil de doctor">
-                                                            <i class="bi bi-eye"></i>
+                                                        <a href="${pageContext.request.contextPath}/CitasController?accion=listar" 
+                                                           class="btn btn-sm btn-info btn-action" 
+                                                           title="Ver Citas">
+                                                            <i class="bi bi-eye"></i> Ver Citas
                                                         </a>
+
                                                     </c:if>
                                                 </div>
                                             </td>
@@ -388,109 +384,109 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            let pacientes = [];
-            let doctores = [];
+                                                                        let pacientes = [];
+                                                                        let doctores = [];
 
-            async function cargarPacientesYDoctores() {
-                try {
-                    // Load patients
-                    const resPacientes = await fetch('${pageContext.request.contextPath}/webresources/pacientes/lista');
-                    pacientes = await resPacientes.json();
+                                                                        async function cargarPacientesYDoctores() {
+                                                                            try {
+                                                                                // Load patients
+                                                                                const resPacientes = await fetch('${pageContext.request.contextPath}/webresources/pacientes/lista');
+                                                                                pacientes = await resPacientes.json();
 
-                    // Load doctors
-                    const resDoctores = await fetch('${pageContext.request.contextPath}/webresources/doctores/lista');
-                    doctores = await resDoctores.json();
+                                                                                // Load doctors
+                                                                                const resDoctores = await fetch('${pageContext.request.contextPath}/webresources/doctores/lista');
+                                                                                doctores = await resDoctores.json();
 
-                    // Update UI based on registration status
-                    actualizarEstadoRegistros();
-                } catch (error) {
-                    console.error('[v0] Error al cargar pacientes y doctores:', error);
-                }
-            }
+                                                                                // Update UI based on registration status
+                                                                                actualizarEstadoRegistros();
+                                                                            } catch (error) {
+                                                                                console.error('[v0] Error al cargar pacientes y doctores:', error);
+                                                                            }
+                                                                        }
 
-            function actualizarEstadoRegistros() {
-                // Check each row for patient/doctor registration
-                document.querySelectorAll('tr[data-usuario-id]').forEach(row => {
-                    const usuarioId = parseInt(row.dataset.usuarioId);
-                    const rol = row.dataset.rol;
+                                                                        function actualizarEstadoRegistros() {
+                                                                            // Check each row for patient/doctor registration
+                                                                            document.querySelectorAll('tr[data-usuario-id]').forEach(row => {
+                                                                                const usuarioId = parseInt(row.dataset.usuarioId);
+                                                                                const rol = row.dataset.rol;
 
-                    if (rol === 'paciente') {
-                        const paciente = pacientes.find(p => p.usuarioId === usuarioId);
-                        const badgeSinRegistro = row.querySelector('.badge-sin-registro[data-tipo="paciente"]');
-                        const btnCrear = row.querySelector('.btn-crear-paciente');
-                        const btnVer = row.querySelector('.btn-ver-paciente');
+                                                                                if (rol === 'paciente') {
+                                                                                    const paciente = pacientes.find(p => p.usuarioId === usuarioId);
+                                                                                    const badgeSinRegistro = row.querySelector('.badge-sin-registro[data-tipo="paciente"]');
+                                                                                    const btnCrear = row.querySelector('.btn-crear-paciente');
+                                                                                    const btnVer = row.querySelector('.btn-ver-paciente');
 
-                        if (paciente) {
-                            // Patient record exists
-                            badgeSinRegistro.classList.add('d-none');
-                            btnCrear.classList.add('d-none');
-                            btnVer.classList.remove('d-none');
-                            btnVer.href = '${pageContext.request.contextPath}/PacientesController?accion=ver&id=' + paciente.id;
-                        } else {
-                            // Patient record doesn't exist
-                            badgeSinRegistro.classList.remove('d-none');
-                            btnCrear.classList.remove('d-none');
-                            btnVer.classList.add('d-none');
-                        }
-                    } else if (rol === 'doctor') {
-                        const doctor = doctores.find(d => d.usuarioId === usuarioId);
-                        const badgeSinRegistro = row.querySelector('.badge-sin-registro[data-tipo="doctor"]');
-                        const btnCrear = row.querySelector('.btn-crear-doctor');
-                        const btnVer = row.querySelector('.btn-ver-doctor');
+                                                                                    if (paciente) {
+                                                                                        // Patient record exists
+                                                                                        badgeSinRegistro.classList.add('d-none');
+                                                                                        btnCrear.classList.add('d-none');
+                                                                                        btnVer.classList.remove('d-none');
+                                                                                        btnVer.href = '${pageContext.request.contextPath}/PacientesController?accion=ver&id=' + paciente.id;
+                                                                                    } else {
+                                                                                        // Patient record doesn't exist
+                                                                                        badgeSinRegistro.classList.remove('d-none');
+                                                                                        btnCrear.classList.remove('d-none');
+                                                                                        btnVer.classList.add('d-none');
+                                                                                    }
+                                                                                } else if (rol === 'doctor') {
+                                                                                    const doctor = doctores.find(d => d.usuarioId === usuarioId);
+                                                                                    const badgeSinRegistro = row.querySelector('.badge-sin-registro[data-tipo="doctor"]');
+                                                                                    const btnCrear = row.querySelector('.btn-crear-doctor');
+                                                                                    const btnVer = row.querySelector('.btn-ver-doctor');
 
-                        if (doctor) {
-                            // Doctor record exists
-                            badgeSinRegistro.classList.add('d-none');
-                            btnCrear.classList.add('d-none');
-                            btnVer.classList.remove('d-none');
-                            btnVer.href = '${pageContext.request.contextPath}/DoctoresController?accion=ver&id=' + doctor.id;
-                        } else {
-                            // Doctor record doesn't exist
-                            badgeSinRegistro.classList.remove('d-none');
-                            btnCrear.classList.remove('d-none');
-                            btnVer.classList.add('d-none');
-                        }
-                    }
-                });
-            }
+                                                                                    if (doctor) {
+                                                                                        // Doctor record exists
+                                                                                        badgeSinRegistro.classList.add('d-none');
+                                                                                        btnCrear.classList.add('d-none');
+                                                                                        btnVer.classList.remove('d-none');
+                                                                                        btnVer.href = '${pageContext.request.contextPath}/DoctoresController?accion=ver&id=' + doctor.id;
+                                                                                    } else {
+                                                                                        // Doctor record doesn't exist
+                                                                                        badgeSinRegistro.classList.remove('d-none');
+                                                                                        btnCrear.classList.remove('d-none');
+                                                                                        btnVer.classList.add('d-none');
+                                                                                    }
+                                                                                }
+                                                                            });
+                                                                        }
 
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('keyup', function () {
-                const searchTerm = this.value.toLowerCase();
-                const rows = document.querySelectorAll('#usuariosTable tbody tr');
+                                                                        // Search functionality
+                                                                        document.getElementById('searchInput').addEventListener('keyup', function () {
+                                                                            const searchTerm = this.value.toLowerCase();
+                                                                            const rows = document.querySelectorAll('#usuariosTable tbody tr');
 
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(searchTerm) ? '' : 'none';
-                });
-            });
+                                                                            rows.forEach(row => {
+                                                                                const text = row.textContent.toLowerCase();
+                                                                                row.style.display = text.includes(searchTerm) ? '' : 'none';
+                                                                            });
+                                                                        });
 
-            // Filter by role
-            function filtrarPorRol(rol) {
-                const rows = document.querySelectorAll('#usuariosTable tbody tr');
-                const buttons = document.querySelectorAll('.filter-btn');
+                                                                        // Filter by role
+                                                                        function filtrarPorRol(rol) {
+                                                                            const rows = document.querySelectorAll('#usuariosTable tbody tr');
+                                                                            const buttons = document.querySelectorAll('.filter-btn');
 
-                buttons.forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
+                                                                            buttons.forEach(btn => btn.classList.remove('active'));
+                                                                            event.target.classList.add('active');
 
-                rows.forEach(row => {
-                    if (rol === 'todos') {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = row.dataset.rol === rol ? '' : 'none';
-                    }
-                });
-            }
+                                                                            rows.forEach(row => {
+                                                                                if (rol === 'todos') {
+                                                                                    row.style.display = '';
+                                                                                } else {
+                                                                                    row.style.display = row.dataset.rol === rol ? '' : 'none';
+                                                                                }
+                                                                            });
+                                                                        }
 
-            function confirmarDesactivar(id, nombre) {
-                document.getElementById('nombreUsuario').textContent = nombre;
-                document.getElementById('btnConfirmarDesactivar').href =
-                        '${pageContext.request.contextPath}/UsuariosController?accion=desactivar&id=' + id;
-                new bootstrap.Modal(document.getElementById('modalDesactivar')).show();
-            }
+                                                                        function confirmarDesactivar(id, nombre) {
+                                                                            document.getElementById('nombreUsuario').textContent = nombre;
+                                                                            document.getElementById('btnConfirmarDesactivar').href =
+                                                                                    '${pageContext.request.contextPath}/UsuariosController?accion=desactivar&id=' + id;
+                                                                            new bootstrap.Modal(document.getElementById('modalDesactivar')).show();
+                                                                        }
 
-            // Load data on page load
-            window.addEventListener('DOMContentLoaded', cargarPacientesYDoctores);
+                                                                        // Load data on page load
+                                                                        window.addEventListener('DOMContentLoaded', cargarPacientesYDoctores);
         </script>
     </body>
 </html>

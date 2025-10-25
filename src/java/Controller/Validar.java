@@ -27,19 +27,28 @@ public class Validar extends HttpServlet {
             String correo = request.getParameter("txtCorreo");
             String contrasenaHash = request.getParameter("txtPassword");
 
-
             u = udao.Validar(correo, contrasenaHash);
 
             if (u.getNombre() != null) {
                 System.out.println("✅ LOGIN EXITOSO - Usuario: " + u.getNombre());
+                System.out.println("✅ Rol: " + u.getRol());
+                System.out.println("✅ ID: " + u.getId()); // Agrega este log
 
                 // Crear sesión y guardar el usuario
                 HttpSession session = request.getSession();
                 session.setAttribute("usuario", u);
+                
+                // GUARDAR EL ID SEGÚN EL ROL
+                if ("doctor".equalsIgnoreCase(u.getRol()) || "médico".equalsIgnoreCase(u.getRol())) {
+                    session.setAttribute("doctorId", u.getId());
+                    System.out.println("✅ Doctor ID guardado en sesión: " + u.getId());
+                } else if ("paciente".equalsIgnoreCase(u.getRol())) {
+                    session.setAttribute("pacienteId", u.getId());
+                    System.out.println("✅ Paciente ID guardado en sesión: " + u.getId());
+                }
 
                 // Redirigir según el rol
                 String rol = u.getRol();
-
                 String dashboardPage = "";
 
                 switch (rol.toLowerCase()) {
@@ -49,6 +58,7 @@ public class Validar extends HttpServlet {
                         break;
                     case "doctor":
                     case "medico":
+                    case "médico":
                         dashboardPage = "dashboard_doctor.jsp";
                         break;
                     case "paciente":
@@ -71,6 +81,11 @@ public class Validar extends HttpServlet {
                 request.setAttribute("error", "Usuario o contraseña incorrectos");
                 request.getRequestDispatcher("index.jsp").forward(request, response);
             }
+        } else if (accion != null && accion.equals("salir")) {
+            // Cerrar sesión
+            HttpSession session = request.getSession();
+            session.invalidate();
+            response.sendRedirect("index.jsp");
         } else {
             response.sendRedirect("index.jsp");
         }

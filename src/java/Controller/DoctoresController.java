@@ -42,6 +42,9 @@ public class DoctoresController extends HttpServlet {
             case "eliminar":
                 eliminar(request, response);
                 break;
+            case "ver": // ← NUEVO CASO AÑADIDO
+                ver(request, response);
+                break;
             default:
                 listar(request, response);
                 break;
@@ -76,7 +79,7 @@ public class DoctoresController extends HttpServlet {
             }
 
             request.setAttribute("doctores", lista);
-            request.getRequestDispatcher("Doctores/usuarios_doctores.jsp").forward(request, response);
+            request.getRequestDispatcher("Doctores/doctores_ver.jsp").forward(request, response);
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Error al listar usuarios: " + e.getMessage());
@@ -85,34 +88,42 @@ public class DoctoresController extends HttpServlet {
     }
 
     protected void registrar(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            int usuarioId = Integer.parseInt(request.getParameter("usuarioId"));
-            String numeroLicencia = request.getParameter("numeroLicencia");
-            String especializacion = request.getParameter("especializacion");
+        throws ServletException, IOException {
+    try {
+        int usuarioId = Integer.parseInt(request.getParameter("usuarioId"));
+        String numeroLicencia = request.getParameter("numeroLicencia");
+        String especializacion = request.getParameter("especializacion");
 
-            doctor.setUsuarioId(usuarioId);
-            doctor.setNumeroLicencia(numeroLicencia);
-            doctor.setEspecializacion(especializacion);
+        System.out.println("[CONTROLLER] Registrando doctor - usuarioId: " + usuarioId + 
+                         ", licencia: " + numeroLicencia + 
+                         ", especializacion: " + especializacion);
 
-            int resultado = dao.Agregar(doctor);
+        doctor.setUsuarioId(usuarioId);
+        doctor.setNumeroLicencia(numeroLicencia);
+        doctor.setEspecializacion(especializacion);
 
-            if (resultado == -1) {
-                request.setAttribute("error", "Este usuario ya está registrado como doctor");
-                nuevo(request, response);
-            } else if (resultado > 0) {
-                request.setAttribute("mensaje", "Doctor registrado exitosamente");
-                listar(request, response);
-            } else {
-                request.setAttribute("error", "Error al registrar doctor");
-                nuevo(request, response);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Error: " + e.getMessage());
-            nuevo(request, response);
+        int resultado = dao.Agregar(doctor);
+        
+        System.out.println("[CONTROLLER] Resultado de agregar: " + resultado);
+
+        if (resultado == -1) {
+            request.setAttribute("error", "Este usuario ya está registrado como doctor");
+            // Redirigir a usuarios_lista incluso en error
+            response.sendRedirect(request.getContextPath() + "/Usuarios/usuarios_lista.jsp?error=Usuario+ya+registrado+como+doctor");
+        } else if (resultado > 0) {
+            request.setAttribute("mensaje", "Doctor registrado exitosamente");
+            // Redirigir a usuarios_lista con mensaje de éxito
+            response.sendRedirect(request.getContextPath() + "/Usuarios/usuarios_lista.jsp");
+        } else {
+            request.setAttribute("error", "Error al registrar doctor. Verifique los logs.");
+            response.sendRedirect(request.getContextPath() + "/Usuarios/usuarios_lista.jsp?error=Error+al+registrar+doctor");
         }
+    } catch (Exception e) {
+        System.out.println("[CONTROLLER] Excepción: " + e.getMessage());
+        e.printStackTrace();
+        response.sendRedirect(request.getContextPath() + "/Usuarios/usuarios_lista.jsp?error=Error+al+registrar+doctor");
     }
+}
 
     protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -206,6 +217,41 @@ public class DoctoresController extends HttpServlet {
         }
 
     }
+
+    protected void ver(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        DoctoresModel doctorVer = null;
+        
+        // Primero intenta buscar por ID del doctor
+        String idParam = request.getParameter("id");
+        if (idParam != null && !idParam.isEmpty()) {
+            long id = Long.parseLong(idParam);
+            doctorVer = dao.BuscarPorId(id);
+        }
+        
+        // Si no se encontró por ID, intenta buscar por usuarioId
+        if (doctorVer == null) {
+            String usuarioIdParam = request.getParameter("usuarioId");
+            if (usuarioIdParam != null && !usuarioIdParam.isEmpty()) {
+                int usuarioId = Integer.parseInt(usuarioIdParam);
+                doctorVer = dao.BuscarPorUsuarioId(usuarioId);
+            }
+        }
+
+        if (doctorVer != null) {
+            request.setAttribute("doctor", doctorVer);
+            request.getRequestDispatcher("Doctores/doctores_ver.jsp").forward(request, response);
+        } else {
+            request.setAttribute("error", "Doctor no encontrado");
+            listar(request, response);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        request.setAttribute("error", "Error al cargar doctor: " + e.getMessage());
+        listar(request, response);
+    }
+}
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

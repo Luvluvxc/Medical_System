@@ -6,6 +6,7 @@ import DAO.DoctoresDAO;
 import Model.CitasModel;
 import Model.PacientesModel;
 import Model.DoctoresModel;
+import Model.UsuariosResourse;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -558,51 +559,66 @@ public class CitasController extends HttpServlet {
     }
 
     protected void listarDoctor(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        try {
-            // Obtener el ID del doctor desde la sesión
-            HttpSession session = request.getSession();
-            Integer doctorId = (Integer) session.getAttribute("doctorId");
-
-            if (doctorId == null) {
-                // Si no hay doctorId en sesión, redirigir al login
-                response.sendRedirect("login.jsp");
-                return;
+        throws ServletException, IOException {
+    try {
+        HttpSession session = request.getSession();
+        
+        // Obtener doctorId de diferentes formas
+        Integer doctorId = (Integer) session.getAttribute("doctorId");
+        
+        // Si no está en doctorId, obtenerlo del objeto usuario
+        if (doctorId == null) {
+            Object usuarioObj = session.getAttribute("usuario");
+            if (usuarioObj != null && usuarioObj instanceof UsuariosResourse) {
+                UsuariosResourse usuario = (UsuariosResourse) usuarioObj;
+                doctorId = (int) usuario.getId(); // Cast a int
+                System.out.println("[DEBUG] Obteniendo doctorId del objeto usuario: " + doctorId);
+                
+                // Guardar en sesión para futuras requests
+                session.setAttribute("doctorId", doctorId);
             }
-
-            List<CitasModel> citasDelDoctor = new ArrayList<>();
-            List<CitasModel> todasLasCitas = dao.Listar();
-
-            // Filtrar citas del doctor
-            for (CitasModel cita : todasLasCitas) {
-                if (cita.getDoctorId() == doctorId) {
-                    citasDelDoctor.add(cita);
-                }
-            }
-
-            // Separar citas de hoy y próximas
-            List<CitasModel> citasHoy = new ArrayList<>();
-            List<CitasModel> proximasCitas = new ArrayList<>();
-            LocalDate hoy = LocalDate.now();
-
-            for (CitasModel cita : citasDelDoctor) {
-                if (cita.getFechaCita().equals(hoy)) {
-                    citasHoy.add(cita);
-                } else if (cita.getFechaCita().isAfter(hoy)) {
-                    proximasCitas.add(cita);
-                }
-            }
-
-            request.setAttribute("citasHoy", citasHoy);
-            request.setAttribute("proximasCitas", proximasCitas);
-            request.getRequestDispatcher("Doctores/dashboard_doctor.jsp").forward(request, response);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Error al cargar citas: " + e.getMessage());
-            request.getRequestDispatcher("Doctores/dashboard_doctor.jsp").forward(request, response);
         }
+
+        System.out.println("[DEBUG] Doctor ID final: " + doctorId);
+
+        if (doctorId == null) {
+            System.out.println("[DEBUG] No se pudo obtener doctorId, redirigiendo...");
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
+        // Resto del código sin cambios...
+        List<CitasModel> citasDelDoctor = dao.ListarPorDoctor(doctorId);
+        System.out.println("[DEBUG] Total citas del doctor: " + citasDelDoctor.size());
+
+        List<CitasModel> citasHoy = new ArrayList<>();
+        List<CitasModel> proximasCitas = new ArrayList<>();
+        LocalDate hoy = LocalDate.now();
+
+        for (CitasModel cita : citasDelDoctor) {
+            System.out.println("[DEBUG] Cita - Fecha: " + cita.getFechaCita() + ", Estado: " + cita.getEstado());
+            
+            if (cita.getFechaCita() != null && cita.getFechaCita().equals(hoy)) {
+                citasHoy.add(cita);
+            } else if (cita.getFechaCita() != null && cita.getFechaCita().isAfter(hoy) && !"cancelada".equals(cita.getEstado())) {
+                proximasCitas.add(cita);
+            }
+        }
+
+        System.out.println("[DEBUG] Citas hoy: " + citasHoy.size());
+        System.out.println("[DEBUG] Próximas citas: " + proximasCitas.size());
+
+        request.setAttribute("citasHoy", citasHoy);
+        request.setAttribute("proximasCitas", proximasCitas);
+        request.getRequestDispatcher("dashboard_doctor.jsp").forward(request, response);
+
+    } catch (Exception e) {
+        System.out.println("[DEBUG] Error en listarDoctor: " + e.getMessage());
+        e.printStackTrace();
+        request.setAttribute("error", "Error al cargar citas: " + e.getMessage());
+        request.getRequestDispatcher("dashboard_doctor.jsp").forward(request, response);
     }
+}
 
     protected void editar(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -326,7 +326,7 @@
 
                             <!-- Botones de Acción -->
                             <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                                <a href="PacientesController?accion=listar" class="btn btn-secondary btn-lg">
+                                <a href="UsuariosController?accion=listar" class="btn btn-secondary btn-lg">
                                     <i class="bi bi-arrow-left"></i> Volver al Listado
                                 </a>
                                 <button type="submit" class="btn btn-primary btn-lg">

@@ -352,12 +352,7 @@
                                                         </button>
                                                     </c:if>
 
-                                                    <c:if test="${cita.estado == 'completada'}">
-                                                        <a href="${pageContext.request.contextPath}/ConsultasController?accion=ver&citaId=${cita.id}" 
-                                                           class="btn btn-sm btn-outline-info btn-action">
-                                                            <i class="bi bi-eye"></i> Ver Consulta
-                                                        </a>
-                                                    </c:if>
+                                                    
                                                 </div>
                                             </td>
                                         </tr>

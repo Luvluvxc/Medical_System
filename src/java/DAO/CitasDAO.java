@@ -20,67 +20,83 @@ public class CitasDAO {
     private static final String BASE_URL = "http://localhost:8080/proyectop/webresources/citas";
 
     public List<CitasModel> ListarPorDoctor(int doctorId) {
-        List<CitasModel> lista = new ArrayList<>();
+    List<CitasModel> lista = new ArrayList<>();
 
-        try {
-            URL url = new URL(BASE_URL + "/lista");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("Accept", "application/json");
+    try {
+        URL url = new URL(BASE_URL + "/lista");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("GET");
+        con.setRequestProperty("Accept", "application/json");
 
-            int responseCode = con.getResponseCode();
+        int responseCode = con.getResponseCode();
 
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
 
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
 
-                JSONArray jsonArray = new JSONArray(response.toString());
+            JSONArray jsonArray = new JSONArray(response.toString());
 
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject obj = jsonArray.getJSONObject(i);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject obj = jsonArray.getJSONObject(i);
 
-                    // Filtrar por doctorId
-                    if (obj.getInt("doctorId") == doctorId) {
-                        CitasModel cita = new CitasModel();
-                        cita.setId(obj.getLong("id"));
-                        cita.setPacienteId(obj.getInt("pacienteId"));
-                        cita.setDoctorId(obj.getInt("doctorId"));
+                // CORRECCIÓN: Usar doctor_id en lugar de doctorId
+               if (obj.getInt("doctor_id") == doctorId) {
+ 
+                    CitasModel cita = new CitasModel();
+                    cita.setId(obj.getLong("id"));
+                    cita.setPacienteId(obj.getInt("paciente_id")); // También corregir aquí
+                    cita.setDoctorId(obj.getInt("doctor_id")); // Y aquí
 
-                        if (obj.has("fechaCita") && !obj.isNull("fechaCita")) {
-                            cita.setFechaCita(LocalDate.parse(obj.getString("fechaCita")));
+                    // Manejo seguro de fechas
+                    if (obj.has("fecha_cita") && !obj.isNull("fecha_cita")) {
+                        try {
+                            cita.setFechaCita(LocalDate.parse(obj.getString("fecha_cita")));
+                        } catch (Exception e) {
+                            System.out.println("Error parseando fecha: " + e.getMessage());
                         }
-
-                        if (obj.has("horaCita") && !obj.isNull("horaCita")) {
-                            cita.setHoraCita(LocalTime.parse(obj.getString("horaCita")));
-                        }
-
-                        cita.setEstado(obj.optString("estado", ""));
-                        cita.setMotivo(obj.optString("motivo", ""));
-
-                        cita.setPacienteNombre(obj.optString("pacienteNombre", ""));
-                        cita.setPacienteApellido(obj.optString("pacienteApellido", ""));
-                        cita.setDoctorNombre(obj.optString("doctorNombre", ""));
-                        cita.setDoctorApellido(obj.optString("doctorApellido", ""));
-                        cita.setDoctorEspecializacion(obj.optString("doctorEspecializacion", ""));
-
-                        lista.add(cita);
                     }
+
+                    // Manejo seguro de horas
+                    if (obj.has("hora_cita") && !obj.isNull("hora_cita")) {
+                        try {
+                            String horaStr = obj.getString("hora_cita");
+                            // Asegurar formato correcto
+                            if (horaStr.length() == 5) {
+                                horaStr = horaStr + ":00";
+                            }
+                            cita.setHoraCita(LocalTime.parse(horaStr));
+                        } catch (Exception e) {
+                            System.out.println("Error parseando hora: " + e.getMessage());
+                        }
+                    }
+
+                    cita.setEstado(obj.optString("estado", ""));
+                    cita.setMotivo(obj.optString("motivo", ""));
+
+                    cita.setPacienteNombre(obj.optString("paciente_nombre", ""));
+                    cita.setPacienteApellido(obj.optString("paciente_apellido", ""));
+                    cita.setDoctorNombre(obj.optString("doctor_nombre", ""));
+                    cita.setDoctorApellido(obj.optString("doctor_apellido", ""));
+                    cita.setDoctorEspecializacion(obj.optString("doctor_especializacion", ""));
+
+                    lista.add(cita);
                 }
             }
-        } catch (Exception e) {
-            System.out.println("[v0] Error al listar citas por doctor: " + e.getMessage());
-            e.printStackTrace();
         }
-
-        return lista;
+    } catch (Exception e) {
+        System.out.println("[v0] Error al listar citas por doctor: " + e.getMessage());
+        e.printStackTrace();
     }
 
+    System.out.println("[v0] Citas encontradas para doctor " + doctorId + ": " + lista.size());
+    return lista;
+}
     public CitasModel BuscarPorId(long id) {
         CitasModel cita = null;
 

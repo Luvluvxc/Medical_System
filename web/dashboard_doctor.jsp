@@ -148,7 +148,7 @@
         <div class="row">
             <div class="col-md-2 sidebar">
                 <nav class="nav flex-column">
-                    <a class="nav-link active" href="dashboard_doctor.jsp">
+                    <a class="nav-link active" href="${pageContext.request.contextPath}/CitasController?accion=listarDoctor">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                     <a class="nav-link" href="${pageContext.request.contextPath}/CitasController?accion=listarDoctor">
@@ -175,6 +175,128 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Mostrar mensajes de éxito o error -->
+                <c:if test="${not empty mensaje}">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle"></i> ${mensaje}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </c:if>
+                
+                <c:if test="${not empty error}">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i> ${error}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </c:if>
+                
+                
+                <!-- Barra de Filtros y Búsqueda -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" id="searchInput" class="form-control" 
+                                   placeholder="Buscar por nombre de paciente..." 
+                                   onkeyup="buscarCitas()">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" 
+                                    onclick="filtrarCitas('todas')">
+                                <i class="bi bi-list-ul"></i> Todas
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" 
+                                    onclick="filtrarCitas('hoy')">
+                                <i class="bi bi-calendar-day"></i> Hoy
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" 
+                                    onclick="filtrarCitas('programadas')">
+                                <i class="bi bi-clock"></i> Programadas
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" 
+                                    onclick="filtrarCitas('completadas')">
+                                <i class="bi bi-check-circle"></i> Completadas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas Rápidas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${citasHoy.size()}</h4>
+                        <p class="mb-0">Citas Hoy</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calendar-day fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="contadorProgramadas">0</h4>
+                        <p class="mb-0">Programadas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-clock fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 id="contadorCompletadas">0</h4>
+                        <p class="mb-0">Completadas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>${proximasCitas.size()}</h4>
+                        <p class="mb-0">Próximas</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calendar-week fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Citas del Día -->
                 <div class="row">
@@ -212,7 +334,7 @@
                                         <div class="col-md-4 text-end">
                                             <c:if test="${cita.estado == 'programada'}">
                                                 <button class="btn btn-consulta me-2" 
-                                                        onclick="abrirModalConsulta(${cita.id})">
+                                                        onclick="abrirModalConsulta(${cita.id}, '${cita.pacienteNombre} ${cita.pacienteApellido}')">
                                                     <i class="bi bi-file-medical"></i> Realizar Consulta
                                                 </button>
                                             </c:if>
@@ -257,7 +379,10 @@
                                             <p class="text-muted">${cita.motivo}</p>
                                         </div>
                                         <div class="col-md-2">
-                                            <span class="badge badge-estado bg-primary">
+                                            <span class="badge badge-estado 
+                                                ${cita.estado == 'programada' ? 'bg-primary' : 
+                                                  cita.estado == 'completada' ? 'bg-success' : 
+                                                  'bg-danger'}">
                                                 ${cita.estado}
                                             </span>
                                         </div>
@@ -282,16 +407,16 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Realizar Consulta Médica</h5>
+                    <h5 class="modal-title">Realizar Consulta Médica - <span id="nombrePacienteModal"></span></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formConsulta" action="${pageContext.request.contextPath}/ConsultasController" method="post">
-                        <input type="hidden" name="accion" value="registrar">
+                        <input type="hidden" name="accion" value="registrarDesdeDoctor">
                         <input type="hidden" name="citaId" id="citaId">
                         
                         <div class="mb-3">
-                            <label for="diagnostico" class="form-label">Diagnóstico</label>
+                            <label for="diagnostico" class="form-label">Diagnóstico *</label>
                             <textarea class="form-control" id="diagnostico" name="diagnostico" 
                                       rows="4" placeholder="Ingrese el diagnóstico del paciente..." required></textarea>
                         </div>
@@ -321,14 +446,23 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function abrirModalConsulta(citaId) {
+        function abrirModalConsulta(citaId, nombrePaciente) {
             document.getElementById('citaId').value = citaId;
+            document.getElementById('nombrePacienteModal').textContent = nombrePaciente;
             const modal = new bootstrap.Modal(document.getElementById('modalConsulta'));
             modal.show();
         }
 
         function registrarConsulta() {
             const form = document.getElementById('formConsulta');
+            const diagnostico = document.getElementById('diagnostico').value.trim();
+            
+            if (!diagnostico) {
+                alert('Por favor ingrese el diagnóstico del paciente.');
+                document.getElementById('diagnostico').focus();
+                return;
+            }
+            
             if (form.checkValidity()) {
                 form.submit();
             } else {
@@ -339,6 +473,89 @@
         function verDetallesPaciente(pacienteId) {
             window.location.href = '${pageContext.request.contextPath}/PacientesController?accion=ver&id=' + pacienteId;
         }
+        
+        // Recargar la página cada 2 minutos para ver citas nuevas
+        setTimeout(function() {
+            window.location.reload();
+        }, 120000);
+        
+        
+        // Agregar después de las funciones existentes en el script
+function filtrarCitas(tipo) {
+    const citasHoy = document.querySelectorAll('.cita-card');
+    const citasProximas = document.querySelectorAll('.row.mt-4 .cita-card');
+    
+    if (tipo === 'todas') {
+        // Mostrar todas las citas
+        citasHoy.forEach(cita => cita.style.display = 'block');
+        citasProximas.forEach(cita => cita.style.display = 'block');
+    } else if (tipo === 'hoy') {
+        // Mostrar solo citas de hoy
+        citasHoy.forEach(cita => cita.style.display = 'block');
+        citasProximas.forEach(cita => cita.style.display = 'none');
+    } else if (tipo === 'programadas') {
+        // Mostrar solo citas programadas
+        citasHoy.forEach(cita => {
+            const estado = cita.querySelector('.badge-estado').textContent.trim();
+            cita.style.display = estado === 'programada' ? 'block' : 'none';
+        });
+        citasProximas.forEach(cita => {
+            const estado = cita.querySelector('.badge-estado').textContent.trim();
+            cita.style.display = estado === 'programada' ? 'block' : 'none';
+        });
+    } else if (tipo === 'completadas') {
+        // Mostrar solo citas completadas
+        citasHoy.forEach(cita => {
+            const estado = cita.querySelector('.badge-estado').textContent.trim();
+            cita.style.display = estado === 'completada' ? 'block' : 'none';
+        });
+        citasProximas.forEach(cita => {
+            const estado = cita.querySelector('.badge-estado').textContent.trim();
+            cita.style.display = estado === 'completada' ? 'block' : 'none';
+        });
+    }
+}
+
+// Función para buscar citas por nombre de paciente
+function buscarCitas() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const todasLasCitas = document.querySelectorAll('.cita-card');
+    
+    todasLasCitas.forEach(cita => {
+        const nombrePaciente = cita.querySelector('.card-title').textContent.toLowerCase();
+        if (nombrePaciente.includes(searchTerm) || searchTerm === '') {
+            cita.style.display = 'block';
+        } else {
+            cita.style.display = 'none';
+        }
+    });
+}
+
+// Función para actualizar contadores
+function actualizarContadores() {
+    const todasLasCitas = document.querySelectorAll('.cita-card');
+    let programadas = 0;
+    let completadas = 0;
+    
+    todasLasCitas.forEach(cita => {
+        const estado = cita.querySelector('.badge-estado').textContent.trim();
+        if (estado === 'programada') programadas++;
+        if (estado === 'completada') completadas++;
+    });
+    
+    document.getElementById('contadorProgramadas').textContent = programadas;
+    document.getElementById('contadorCompletadas').textContent = completadas;
+}
+
+// Actualizar contadores cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarContadores();
+    
+    // Auto-refresh cada 2 minutos
+    setInterval(function() {
+        window.location.reload();
+    }, 120000);
+});
     </script>
 </body>
 </html>
